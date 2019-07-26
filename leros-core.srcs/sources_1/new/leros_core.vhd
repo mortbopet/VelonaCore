@@ -15,7 +15,7 @@ entity Leros_core is
         im_data_in : in std_logic_vector(INSTR_WIDTH - 1 downto 0);
         im_data_in_valid : in std_logic;
 
-        -- data address is byte-aligned
+        -- Data memory address is byte-aligned
         -- Data memory I/O
         dm_addr : out unsigned(REG_WIDTH-1 downto 0);
         dm_data_out : out std_logic_vector(REG_WIDTH-1 downto 0);
