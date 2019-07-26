@@ -5,19 +5,32 @@ use IEEE.NUMERIC_STD.ALL;
 use work.Common.all;
 
 entity Leros_core is
-    port (
-        -- outputs
-        pc_sig : out unsigned(REG_WIDTH-1 downto 0);
-        dm_addr : out unsigned(REG_WIDTH-1 downto 0);
-        dm_wr_en : out std_logic;
-        dm_data_out : out std_logic_vector(REG_WIDTH-1 downto 0);
-        dm_data_in : in std_logic_vector(REG_WIDTH-1 downto 0);
-        acc_sig : out std_logic_vector(REG_WIDTH - 1 downto 0);
-
-        -- inputs
+    port ( 
         clk : in std_logic;
         rst : in std_logic;
-        instr : in std_logic_vector(INSTR_WIDTH - 1 downto 0)
+
+        -- Instruction memory I/O
+        -- Instruction memory address is half-word aligned
+        im_addr : out unsigned(REG_WIDTH-1 downto 0);
+        im_data_in : in std_logic_vector(INSTR_WIDTH - 1 downto 0);
+        im_data_in_valid : in std_logic;
+
+        -- data address is byte-aligned
+        -- Data memory I/O
+        dm_addr : out unsigned(REG_WIDTH-1 downto 0);
+        dm_data_out : out std_logic_vector(REG_WIDTH-1 downto 0);
+        dm_wr_en : out std_logic;
+        dm_data_in : in std_logic_vector(REG_WIDTH-1 downto 0);
+        dm_data_in_valid : in std_logic;
+
+        -- Register I/O
+        reg_addr : out unsigned(NLOG_REGS - 1 downto 0);
+        reg_wr_en : out std_logic;
+        reg_data_out : out std_logic_vector(REG_WIDTH-1 downto 0);
+        reg_data_in : in std_logic_vector(REG_WIDTH-1 downto 0);
+
+        -- Accumulator passthrough
+        acc_sig : out std_logic_vector(REG_WIDTH - 1 downto 0)
     );
 end Leros_core;
 
@@ -28,10 +41,10 @@ architecture Behavioral of Leros_core is
     signal acc_ctrl : MEM_op;
     signal br_ctrl : BR_op;
     signal imm_ctrl : IMM_op;
-    signal alu_op1_ctrl : ALU_OP1_op;
+    signal alu_op1_ctrl : ALU_OP1_op; 
     signal alu_op2_ctrl : ALU_OP2_op;
     signal do_branch : std_logic;
-    signal dm_addr_sel : DM_sel;
+    signal dm_addr_en : std_logic;
 
     -- Entity output signals
     signal alu_op1 : signed(REG_WIDTH - 1 downto 0);
@@ -57,7 +70,8 @@ begin
         imm_ctrl => imm_ctrl,
         alu_op1_ctrl => alu_op1_ctrl,
         alu_op2_ctrl => alu_op2_ctrl,
-        br_ctrl => br_ctrl
+        br_ctrl => br_ctrl,
+        dm_addr_en => dm_addr_en
     );
 
     ALU_ent : entity work.ALU
@@ -80,14 +94,14 @@ begin
 
     IMM_ent : entity work.IMM
     port map (
-        instr => instr,
+        instr => im_data_in,
         ctrl => imm_ctrl,
         imm => immediate
     );
 
     DECODE_ent : entity work.InstrDecoder
     port map (
-        instr => instr,
+        instr => im_data_in,
         op => instr_op
     );
 
@@ -102,12 +116,12 @@ begin
 
 
     -- Memory I/O logic
+    im_addr <= pc_reg;
     dm_data_out <= acc_reg;
-    pc_sig <= pc_reg;
 
-    with dm_addr_sel select
-            dm_addr <= resize(unsigned(instr(7 downto 0)), dm_addr'length) when reg,
-                       addr_reg when mem;
+    with dm_addr_en select 
+        dm_addr <= unsigned(alu_res) when '1',
+                   (others => '0') when others;
 
     -- Clocking logic
     process(clk, do_branch, instr_op) is

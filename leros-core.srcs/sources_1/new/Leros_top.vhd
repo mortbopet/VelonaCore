@@ -13,8 +13,8 @@ end Leros_top;
 
 architecture Behavioral of Leros_top is
 
-    signal instr : std_logic_vector(INSTR_WIDTH - 1 downto 0);
-    signal pc : unsigned(REG_WIDTH - 1 downto 0);
+    signal im_data_in : std_logic_vector(INSTR_WIDTH - 1 downto 0);
+    signal im_addr : unsigned(REG_WIDTH - 1 downto 0);
     signal acc : std_logic_vector(REG_WIDTH - 1 downto 0);
 
     signal dm_data_rd : std_logic_vector(REG_WIDTH - 1 downto 0);
@@ -28,15 +28,18 @@ begin
 
     Core_ent :  entity work.Leros_core
     port map (
-        pc => pc,
+        im_addr => im_addr,
+        im_data_in_valid => '1',
         dm_addr => dm_addr,
+        dm_data_in_valid => '0',
+        reg_data_in => (others => '0'),
         dm_data_in => dm_data_rd,
         dm_data_out => dm_data_wr,
         dm_wr_en => dm_wr_en,
         clk => clk,
         rst => '0',
-        instr => instr,
-        acc => acc
+        im_data_in => im_data_in,
+        acc_sig => acc
     );
 
     Data_mem : entity work.RAM
@@ -58,8 +61,8 @@ begin
         addr_width => 4
     )
     port map (
-        addr => pc(3 downto 0),
-        data_out => instr
+        addr => im_addr(3 downto 0),
+        data_out => im_data_in
     );
 
 end Behavioral;

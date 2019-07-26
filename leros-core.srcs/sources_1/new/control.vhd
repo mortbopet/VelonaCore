@@ -15,7 +15,8 @@ entity Control is
         imm_ctrl : out IMM_op;
         alu_op1_ctrl : out ALU_OP1_op;
         alu_op2_ctrl : out ALU_OP2_op;
-        br_ctrl : out BR_op
+        br_ctrl : out BR_op;
+        dm_addr_en : out std_logic
     );
 end Control;
 
@@ -49,6 +50,9 @@ begin
                     invalid when others;
 
     -- Data memory control
+    with instr select 
+        dm_addr_en <= '1' when ldind | ldindb | ldindh | stind | stindb | stindh,
+                      '0' when others;
 
     -- Immediate control
     with instr select

@@ -12,18 +12,21 @@ architecture Behavioral of add_tb is
     signal clk : std_logic;
     constant clk_period : time := 1 ns;
 
-    signal pc : unsigned(REG_WIDTH - 1 downto 0);
-    signal instr : std_logic_vector(INSTR_WIDTH - 1 downto 0);
+    signal im_addr : unsigned(REG_WIDTH - 1 downto 0);
+    signal im_data_in : std_logic_vector(INSTR_WIDTH - 1 downto 0);
 
 begin
 
     Core_ent :  entity work.Leros_core
     port map (
-        pc_sig => pc,
+        im_addr => im_addr,
         dm_data_in => (others => '0'),
+        dm_data_in_valid => '0',
+        reg_data_in => (others => '0'),
         clk => clk,
         rst => '0',
-        instr => instr
+        im_data_in => im_data_in,
+        im_data_in_valid => '1'
     );
 
     Instr_mem : entity work.ROM
@@ -33,8 +36,8 @@ begin
         init_file => "add_tb_data.txt"
     )
     port map (
-        addr => pc(3 downto 0),
-        data_out => instr
+        addr => im_addr(3 downto 0),
+        data_out => im_data_in
     );
     
     clk_process :process

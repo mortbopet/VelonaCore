@@ -16,11 +16,6 @@ package Common is
         loadh3i
     );
 
-    type DM_sel is (
-        reg,
-        mem
-    );
-
     type MEM_op is (
         invalid,
         wr
@@ -128,5 +123,7 @@ package Common is
 
     constant INSTR_WIDTH : integer := 16;
     constant REG_WIDTH : integer := 32;
+
+    constant NLOG_REGS : integer := 8; -- 2^8 registers
 
 end Common;
