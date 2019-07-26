@@ -16,7 +16,8 @@ entity Control is
         alu_op1_ctrl : out ALU_OP1_op;
         alu_op2_ctrl : out ALU_OP2_op;
         br_ctrl : out BR_op;
-        dm_addr_en : out std_logic
+        dm_addr_en : out std_logic;
+        dm_access_size : out ACCESS_SIZE_op
     );
 end Control;
 
@@ -47,12 +48,18 @@ begin
         acc_ctrl <= wr when add | addi | sub | subi | shra | load | loadi |
                             andr | andi | orr | ori | xorr | xori | loadhi |
                             loadh2i | loadh3i | ldind | ldindb | ldindh,
-                    invalid when others;
+                    nop when others;
 
     -- Data memory control
     with instr select 
         dm_addr_en <= '1' when ldind | ldindb | ldindh | stind | stindb | stindh,
                       '0' when others;
+
+    with instr select
+        dm_access_size <= byte when ldindb | stindb,
+                          half when ldindh | stindh,
+                          word when ldind | stind,
+                          byte when others;
 
     -- Immediate control
     with instr select

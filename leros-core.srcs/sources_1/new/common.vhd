@@ -22,8 +22,9 @@ package Common is
     );
 
     type MEM_op is (
-        invalid,
-        wr
+        nop,
+        wr,
+        rd
     );
 
     type ALU_OP1_op is (
@@ -35,6 +36,12 @@ package Common is
     type ALU_OP2_op is (
         reg,
         imm
+    );
+
+    type ACCESS_SIZE_op is (
+        byte,
+        half,
+        word
     );
 
     type BR_op is (
@@ -98,19 +105,25 @@ package Common is
     type LEROS_MEM_IN is record
         dm_data_in : std_logic_vector(REG_WIDTH-1 downto 0);
         dm_data_in_valid : std_logic;
+
         reg_data_in : std_logic_vector(REG_WIDTH-1 downto 0);
+        reg_data_in_valid : std_logic;
+
         im_data_in : std_logic_vector(INSTR_WIDTH - 1 downto 0);
         im_data_in_valid : std_logic;
     end record LEROS_MEM_IN;
 
     type LEROS_MEM_OUT is record
         im_addr : unsigned(REG_WIDTH-1 downto 0);
+
         reg_addr : unsigned(NLOG_REGS - 1 downto 0);
-        reg_wr_en : std_logic;
         reg_data_out : std_logic_vector(REG_WIDTH-1 downto 0);
+        reg_op : MEM_op;
+
         dm_addr : unsigned(REG_WIDTH-1 downto 0);
         dm_data_out : std_logic_vector(REG_WIDTH-1 downto 0);
-        dm_wr_en : std_logic;
+        dm_op : MEM_op;
+        dm_access_size : ACCESS_SIZE_op;
     end record LEROS_MEM_OUT;
 
 

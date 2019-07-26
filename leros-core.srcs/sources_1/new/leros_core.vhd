@@ -10,10 +10,7 @@ entity Leros_core is
         rst : in std_logic;
 
         mem_in : in LEROS_MEM_IN;
-        mem_out : out LEROS_MEM_OUT;
-
-        -- Accumulator passthrough
-        acc_sig : out std_logic_vector(REG_WIDTH - 1 downto 0)
+        mem_out : out LEROS_MEM_OUT
     );
 end Leros_core;
 
@@ -43,8 +40,6 @@ architecture Behavioral of Leros_core is
 
 begin
 
-    acc_sig <= acc_reg;
-
     CONTROL_ent : entity work.Control
     port map (
         instr => instr_op,
@@ -54,7 +49,8 @@ begin
         alu_op1_ctrl => alu_op1_ctrl,
         alu_op2_ctrl => alu_op2_ctrl,
         br_ctrl => br_ctrl,
-        dm_addr_en => dm_addr_en
+        dm_addr_en => dm_addr_en,
+        dm_access_size => mem_out.dm_access_size
     );
 
     ALU_ent : entity work.ALU
