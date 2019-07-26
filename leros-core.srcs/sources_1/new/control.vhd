@@ -62,16 +62,21 @@ begin
                     loadh3i when loadh3i,
                     branch when br | brz | brp | brn | brnz,
                     jal when jal,
+                    loadi when stindb | ldindb,
+                    shl1 when stindh | ldindh,
+                    shl2 when stind | ldind,
                     nop when others;
     
     -- ALU Operand selection
     with instr select
         alu_op1_ctrl <= pc when jal | br | brz | brnz | brp | brn,
+                        addr when ldind | ldindh | ldindb | stind | stindh | stindb,
                         acc when others;
 
     with instr select
         alu_op2_ctrl <= imm when addi | subi | andi | xori | jal | loadi |
-                           br | brz | brnz | brp | brn,
+                           br | brz | brnz | brp | brn |
+                           ldind | ldindh | ldindb | stind | stindh | stindb,
                         reg when others;
 
     -- Branch unit control

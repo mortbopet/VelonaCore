@@ -17,6 +17,8 @@ architecture Behavioral of IMM is
 begin
     with ctrl select
         imm <=  (others => '0') when nop,
+                resize(signed(instr(7 downto 0)) sll 1, imm'length) when shl1,
+                resize(signed(instr(7 downto 0)) sll 2, imm'length) when shl2,
                 resize(signed(instr(7 downto 0)), imm'length) when loadi,
                 resize(signed(instr(7 downto 0)) sll 8, imm'length) when loadhi,
                 resize(signed(instr(7 downto 0)) sll 16, imm'length) when loadh2i,

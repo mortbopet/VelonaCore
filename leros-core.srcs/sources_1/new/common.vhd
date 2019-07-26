@@ -23,7 +23,8 @@ package Common is
 
     type ALU_OP1_op is (
         acc,
-        pc
+        pc,
+        addr
     );
 
     type ALU_OP2_op is (
@@ -42,6 +43,8 @@ package Common is
 
     type IMM_op is (
         nop,
+        shl1,
+        shl2,
         branch,
         loadi,
         loadhi,

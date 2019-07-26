@@ -108,7 +108,8 @@ begin
     -- ALU logic
     with alu_op1_ctrl select
         alu_op1 <= signed(pc_reg) when pc,
-                   signed(acc_reg) when acc;
+                   signed(acc_reg) when acc,
+                   signed(addr_reg) when addr;
 
     with alu_op2_ctrl select
         alu_op2 <= signed(dm_data_in) when reg,
