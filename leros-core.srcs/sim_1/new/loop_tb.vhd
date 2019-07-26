@@ -30,16 +30,16 @@ begin
         rst => '0'
     );
 
-    Instr_mem : entity work.ROM
-    generic map (
-        data_width => INSTR_WIDTH,
-        addr_width => 4,
-        init_file => "loop_data.txt"
-    )
-    port map (
-        addr => mem_fromcore.im_addr(3 downto 0),
-        data_out => mem_tocore.im_data_in
-    );
+    MemorySystem : entity work.LEROSB3MEM
+        generic  map (
+            rom_init_file => "loop_data.txt"
+        )
+        port map (
+            clk => clk,
+            rst => '0',
+            mem_out => mem_tocore,
+            mem_in => mem_fromcore
+        );
     
     clk_process :process
     begin
