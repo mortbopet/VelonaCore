@@ -13,6 +13,9 @@ end Leros_top;
 
 architecture Behavioral of Leros_top is
 
+    signal mem_tocore : LEROS_MEM_IN;
+    signal mem_fromcore : LEROS_MEM_OUT;
+
     signal im_data_in : std_logic_vector(INSTR_WIDTH - 1 downto 0);
     signal im_addr : unsigned(REG_WIDTH - 1 downto 0);
     signal acc : std_logic_vector(REG_WIDTH - 1 downto 0);
@@ -26,19 +29,16 @@ begin
 
     led <= acc(15 downto 0);
 
+    mem_tocore.im_data_in_valid <= '1';
+    mem_tocore.dm_data_in_valid <= '0';
+    mem_tocore.reg_data_in <= (others => '0');
+
     Core_ent :  entity work.Leros_core
     port map (
-        im_addr => im_addr,
-        im_data_in_valid => '1',
-        dm_addr => dm_addr,
-        dm_data_in_valid => '0',
-        reg_data_in => (others => '0'),
-        dm_data_in => dm_data_rd,
-        dm_data_out => dm_data_wr,
-        dm_wr_en => dm_wr_en,
+        mem_out => mem_fromcore,
+        mem_in => mem_tocore,
         clk => clk,
         rst => '0',
-        im_data_in => im_data_in,
         acc_sig => acc
     );
 
@@ -49,10 +49,10 @@ begin
     )
     port map (
         clk => clk,
-        data_in => dm_data_wr,
-        data_out => dm_data_rd,
-        addr => dm_addr(7 downto 0),
-        wr_en => dm_wr_en
+        data_in => mem_fromcore.dm_data_out,
+        data_out => mem_tocore.dm_data_in,
+        addr => mem_fromcore.dm_addr(7 downto 0),
+        wr_en => mem_fromcore.dm_wr_en
     );
 
     Instr_mem : entity work.ROM
@@ -61,8 +61,8 @@ begin
         addr_width => 4
     )
     port map (
-        addr => im_addr(3 downto 0),
-        data_out => im_data_in
+        addr => mem_fromcore.im_addr(3 downto 0),
+        data_out => mem_tocore.im_data_in
     );
 
 end Behavioral;

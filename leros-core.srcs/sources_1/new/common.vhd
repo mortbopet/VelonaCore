@@ -1,7 +1,12 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 package Common is
+    constant INSTR_WIDTH : integer := 16;
+    constant REG_WIDTH : integer := 32;
+    constant NLOG_REGS : integer := 8; -- 2^8 registers
+
     type ALU_op is (
         nop,
         add,
@@ -90,6 +95,25 @@ package Common is
         brn
     );
 
+    type LEROS_MEM_IN is record
+        dm_data_in : std_logic_vector(REG_WIDTH-1 downto 0);
+        dm_data_in_valid : std_logic;
+        reg_data_in : std_logic_vector(REG_WIDTH-1 downto 0);
+        im_data_in : std_logic_vector(INSTR_WIDTH - 1 downto 0);
+        im_data_in_valid : std_logic;
+    end record LEROS_MEM_IN;
+
+    type LEROS_MEM_OUT is record
+        im_addr : unsigned(REG_WIDTH-1 downto 0);
+        reg_addr : unsigned(NLOG_REGS - 1 downto 0);
+        reg_wr_en : std_logic;
+        reg_data_out : std_logic_vector(REG_WIDTH-1 downto 0);
+        dm_addr : unsigned(REG_WIDTH-1 downto 0);
+        dm_data_out : std_logic_vector(REG_WIDTH-1 downto 0);
+        dm_wr_en : std_logic;
+    end record LEROS_MEM_OUT;
+
+
     constant NOP_OPC    : std_logic_vector(7 downto 0) := "00000---";
     constant ADD_OPC    : std_logic_vector(7 downto 0) := "000010-0";
     constant ADDI_OPC   : std_logic_vector(7 downto 0) := "000010-1";
@@ -123,10 +147,5 @@ package Common is
     constant BRNZ_OPC   : std_logic_vector(7 downto 0) := "1010----";
     constant BRP_OPC    : std_logic_vector(7 downto 0) := "1011----";
     constant BRN_OPC    : std_logic_vector(7 downto 0) := "1100----";
-
-    constant INSTR_WIDTH : integer := 16;
-    constant REG_WIDTH : integer := 32;
-
-    constant NLOG_REGS : integer := 8; -- 2^8 registers
 
 end Common;

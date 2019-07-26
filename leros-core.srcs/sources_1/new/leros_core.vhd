@@ -9,25 +9,8 @@ entity Leros_core is
         clk : in std_logic;
         rst : in std_logic;
 
-        -- Instruction memory I/O
-        -- Instruction memory address is half-word aligned
-        im_addr : out unsigned(REG_WIDTH-1 downto 0);
-        im_data_in : in std_logic_vector(INSTR_WIDTH - 1 downto 0);
-        im_data_in_valid : in std_logic;
-
-        -- Data memory address is byte-aligned
-        -- Data memory I/O
-        dm_addr : out unsigned(REG_WIDTH-1 downto 0);
-        dm_data_out : out std_logic_vector(REG_WIDTH-1 downto 0);
-        dm_wr_en : out std_logic;
-        dm_data_in : in std_logic_vector(REG_WIDTH-1 downto 0);
-        dm_data_in_valid : in std_logic;
-
-        -- Register I/O
-        reg_addr : out unsigned(NLOG_REGS - 1 downto 0);
-        reg_wr_en : out std_logic;
-        reg_data_out : out std_logic_vector(REG_WIDTH-1 downto 0);
-        reg_data_in : in std_logic_vector(REG_WIDTH-1 downto 0);
+        mem_in : in LEROS_MEM_IN;
+        mem_out : out LEROS_MEM_OUT;
 
         -- Accumulator passthrough
         acc_sig : out std_logic_vector(REG_WIDTH - 1 downto 0)
@@ -94,14 +77,14 @@ begin
 
     IMM_ent : entity work.IMM
     port map (
-        instr => im_data_in,
+        instr => mem_in.im_data_in,
         ctrl => imm_ctrl,
         imm => immediate
     );
 
     DECODE_ent : entity work.InstrDecoder
     port map (
-        instr => im_data_in,
+        instr => mem_in.im_data_in,
         op => instr_op
     );
 
@@ -112,16 +95,16 @@ begin
                    signed(addr_reg) when addr;
 
     with alu_op2_ctrl select
-        alu_op2 <= signed(dm_data_in) when reg,
+        alu_op2 <= signed(mem_in.dm_data_in) when reg,
                    immediate when imm;
 
 
     -- Memory I/O logic
-    im_addr <= pc_reg;
-    dm_data_out <= acc_reg;
+    mem_out.im_addr <= pc_reg;
+    mem_out.dm_data_out <= acc_reg;
 
     with dm_addr_en select 
-        dm_addr <= unsigned(alu_res) when '1',
+        mem_out.dm_addr <= unsigned(alu_res) when '1',
                    (others => '0') when others;
 
     -- Clocking logic

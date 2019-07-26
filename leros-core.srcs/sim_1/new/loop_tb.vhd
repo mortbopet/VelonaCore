@@ -11,22 +11,23 @@ architecture Behavioral of loop_tb is
 
     signal clk : std_logic;
     constant clk_period : time := 1 ns;
-
-    signal im_addr : unsigned(REG_WIDTH - 1 downto 0);
-    signal im_data_in : std_logic_vector(INSTR_WIDTH - 1 downto 0);
+    
+    signal mem_tocore : LEROS_MEM_IN;
+    signal mem_fromcore : LEROS_MEM_OUT;
 
 begin
+    
+    mem_tocore.dm_data_in <= (others => '0');
+    mem_tocore.dm_data_in_valid <= '0';
+    mem_tocore.reg_data_in <= (others => '0');
+    mem_tocore.im_data_in_valid <= '1';
 
     Core_ent :  entity work.Leros_core
     port map (
-        im_addr => im_addr,
-        dm_data_in => (others => '0'),
-        dm_data_in_valid => '0',
-        reg_data_in => (others => '0'),
+        mem_out => mem_fromcore,
+        mem_in => mem_tocore,
         clk => clk,
-        rst => '0',
-        im_data_in => im_data_in,
-        im_data_in_valid => '1'
+        rst => '0'
     );
 
     Instr_mem : entity work.ROM
@@ -36,8 +37,8 @@ begin
         init_file => "loop_data.txt"
     )
     port map (
-        addr => im_addr(3 downto 0),
-        data_out => im_data_in
+        addr => mem_fromcore.im_addr(3 downto 0),
+        data_out => mem_tocore.im_data_in
     );
     
     clk_process :process
