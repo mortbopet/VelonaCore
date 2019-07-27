@@ -9,7 +9,7 @@ use work.Common.all;
 
 architecture Behavioral of loop_tb is
 
-    signal clk : std_logic;
+    signal clk, rst : std_logic;
     constant clk_period : time := 1 ns;
     
     signal mem_tocore : LEROS_MEM_IN;
@@ -27,7 +27,7 @@ begin
         mem_out => mem_fromcore,
         mem_in => mem_tocore,
         clk => clk,
-        rst => '0'
+        rst => rst
     );
 
     MemorySystem : entity work.LEROSB3MEM
@@ -36,7 +36,7 @@ begin
         )
         port map (
             clk => clk,
-            rst => '0',
+            rst => rst,
             mem_out => mem_tocore,
             mem_in => mem_fromcore
         );
@@ -47,6 +47,14 @@ begin
         wait for clk_period/2;
         clk <= '1';
         wait for clk_period/2;
+    end process;
+
+    rst_process : process
+    begin
+        rst <= '1';
+        wait for clk_period;
+        rst <= '0';
+        wait;
     end process;
 
 end Behavioral;

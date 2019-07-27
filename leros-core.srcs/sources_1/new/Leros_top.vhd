@@ -35,7 +35,7 @@ begin
             rst => '0',
             mem_out => mem_tocore,
             mem_in => mem_fromcore,
-            led => led
+            leds => led
         );
 
 end Behavioral;

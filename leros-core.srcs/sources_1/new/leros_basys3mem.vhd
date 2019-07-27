@@ -27,11 +27,15 @@ entity LEROSB3MEM is
       clk, rst : in std_logic;
       mem_out : out LEROS_MEM_IN;
       mem_in : in LEROS_MEM_OUT;
-      led : out std_logic_vector(15 downto 0)
+      leds : out std_logic_vector(15 downto 0)
   );
 end LEROSB3MEM;
 
 architecture Behavioral of LEROSB3MEM is
+
+    -- Add any peripherals as a memory destination
+    type mem_dest_t is (invalid, ram, reg, led);
+    signal mem_dest : mem_dest_t := invalid;
 
     constant led_addr : unsigned(REG_WIDTH - 1 downto 0) := X"9FFF0000";
     -- RAM size is specified in words, but ibyte indexed
@@ -48,9 +52,11 @@ architecture Behavioral of LEROSB3MEM is
     signal access_size : ACCESS_SIZE_op;
     signal ram_data_in : std_logic_vector(REG_WIDTH - 1 downto 0);
 
+    signal leds_reg : std_logic_vector(15 downto 0);
+
 begin
 
-    access_size_proc : process(mem_in.reg_op)
+    access_size_proc : process(mem_in.reg_op, mem_in.dm_op)
     begin
         -- Given the registers being mapped to RAM, access size from dm
         -- is overridden to a full word access if register access is requested
@@ -87,21 +93,37 @@ begin
         access_size => access_size
     );
 
-    -- Memory mapped peripherals
-    memory_mapping : process(mem_in.dm_addr, ram_data_out, mem_in.dm_op, mem_in.reg_op)
+    -- Determine access
+    determine_access : process(mem_in.dm_addr, ram_data_out, mem_in.dm_op, mem_in.reg_op)
     begin
-        led <= (others => '0');
-        ram_addr <=  "01010101010";
+        -- Memory access (RAM)
+        if mem_in.dm_op /= nop and mem_in.dm_addr < 2**ram_address_width then
+            mem_dest <= ram;
+        -- Register acces - mapped to top 256 32-bit words of RAM
+        elsif mem_in.reg_op /= nop then
+            mem_dest <= reg;
+        -- Peripheral access through memory mapping
+        elsif (mem_in.dm_addr = led_addr) and (mem_in.dm_op = wr) then
+            mem_dest <= led;
+        else
+            mem_dest <= invalid;
+        end if;
+    end process;
+
+    -- Assign memory access signals to RAM/Registers
+    assign_memsigs : process(mem_dest)
+    begin
+        ram_addr <=  (others => 'Z');
         mem_out.dm_data_valid <= '0';
         mem_out.reg_data_valid <= '0';
-        mem_out.dm_data <= (others => '0');
-        mem_out.reg_data <= (others => '0');
-        ram_data_in <= X"DEADBEEF";
+        mem_out.dm_data <= (others => 'Z');
+        mem_out.reg_data <= (others => 'Z');
+        ram_data_in <= (others => 'Z');
         ram_wr_en <= '0';
 
         -- Memory access (RAM)
-        if mem_in.dm_op /= nop and mem_in.dm_addr < 2**ram_address_width then
-            ram_addr <= mem_in.dm_addr(ram_addr'left downto 0);
+        if mem_dest = ram then
+            ram_addr <= mem_in.dm_addr(ram_address_width - 1 downto 0);
             ram_data_in <= mem_in.dm_data;
             if mem_in.dm_op = rd then
                 mem_out.dm_data_valid <= '1';
@@ -111,7 +133,7 @@ begin
             end if;
         
         -- Register acces - mapped to top 256 32-bit words of RAM
-        elsif mem_in.reg_op /= nop then
+        elsif mem_dest = reg then
             -- Register number is shifted left twice, given that RAM is byte-addressable
             -- NLOG_REGS + 2, given that registers take up 2**(NLOG_REGS + 2) bytes.
             ram_addr <= 
@@ -124,14 +146,21 @@ begin
             else
                 ram_wr_en <= '1';
             end if;
-
-        -- Peripheral access through memory mapping
-        elsif (mem_in.dm_addr = led_addr) and (mem_in.dm_op = wr) then
-            led <= mem_in.dm_data(15 downto 0);
         end if;
     end process;
 
-
-
+    -- Each memory mapped peripheral will have a set of registers assigned to the memory
+    -- addresses. These peripherals shall be assigned in the following clocked process
+    peripherals : process(clk)
+    begin
+        if rising_edge(clk) then
+            if rst = '1' then
+                leds_reg <= (others => '0');
+            elsif mem_dest = led then
+                leds_reg <= mem_in.dm_data(15 downto 0);
+            end if;
+        end if;
+    end process;
+    leds <= leds_reg;
 
 end Behavioral;

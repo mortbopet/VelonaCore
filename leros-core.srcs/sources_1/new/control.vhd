@@ -32,7 +32,8 @@ begin
 
     -- ALU control
     with instr select
-        alu_ctrl <= add when add | addi | br | brz | brnz | brp | brn | jal,
+        alu_ctrl <= add when add | addi | br | brz | brnz | brp | brn | jal |
+                             ldind | ldindb | ldindh | stind | stindb | stindh,
                     sub when sub | subi,
                     shra when shra,
                     alu_and when andr | andi,
