@@ -49,8 +49,9 @@ begin
         alu_op1_ctrl => alu_op1_ctrl,
         alu_op2_ctrl => alu_op2_ctrl,
         br_ctrl => br_ctrl,
-        dm_addr_en => dm_addr_en,
-        dm_access_size => mem_out.dm_access_size
+        dm_access_size => mem_out.dm_access_size,
+        dm_op => mem_out.dm_op,
+        reg_op => mem_out.reg_op
     );
 
     ALU_ent : entity work.ALU
@@ -91,17 +92,20 @@ begin
                    signed(addr_reg) when addr;
 
     with alu_op2_ctrl select
-        alu_op2 <= signed(mem_in.dm_data_in) when reg,
+        alu_op2 <= signed(mem_in.reg_data_in) when reg,
                    immediate when imm;
 
 
     -- Memory I/O logic
     mem_out.im_addr <= pc_reg;
     mem_out.dm_data_out <= acc_reg;
+    mem_out.dm_addr <= unsigned(alu_res);
 
-    with dm_addr_en select 
-        mem_out.dm_addr <= unsigned(alu_res) when '1',
-                   (others => '0') when others;
+    -- Register I/O logic
+    with instr_op select
+        mem_out.reg_data_out <= std_logic_vector(alu_res) when jal,
+                                acc_reg when others;
+    mem_out.reg_addr <= unsigned(mem_in.im_data_in(7 downto 0));
 
     -- Clocking logic
     process(clk, do_branch, instr_op) is

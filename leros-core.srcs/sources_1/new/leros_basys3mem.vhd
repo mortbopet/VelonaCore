@@ -34,16 +34,32 @@ end LEROSB3MEM;
 architecture Behavioral of LEROSB3MEM is
 
     constant led_addr : unsigned(REG_WIDTH - 1 downto 0) := X"9FFF0000";
-    -- 2kB RAM: 2**9 * 32 bit
-    constant ram_address_width : integer := 9;
-    constant rom_address_width : integer := 5;
+    -- RAM size is specified in words, but ibyte indexed
+    -- 2**(11 - 2) * 4 B = 2kB RAM
+    constant ram_address_width : integer := 11;
+    -- 2**8 * 2 B = 512B ROM
+    constant rom_address_width : integer := 8;
 
 
     signal ram_data_out : std_logic_vector(REG_WIDTH-1 downto 0);
     signal ram_addr : unsigned(ram_address_width - 1 downto 0);
     signal ram_wr_en : std_logic;
 
+    signal access_size : ACCESS_SIZE_op;
+    signal ram_data_in : std_logic_vector(REG_WIDTH - 1 downto 0);
+
 begin
+
+    access_size_proc : process(mem_in.reg_op)
+    begin
+        -- Given the registers being mapped to RAM, access size from dm
+        -- is overridden to a full word access if register access is requested
+        if mem_in.reg_op /= nop then
+            access_size <= word;
+        else
+            access_size <= mem_in.dm_access_size;
+        end if;
+    end process;
 
     Instr_mem : entity work.ROM
     generic map (
@@ -59,31 +75,33 @@ begin
     -- 1kB RAM
     Data_mem : entity work.RAM
     generic map (
-        size => ram_address_width
+        size => (ram_address_width - 2) -- size specified in words, ram_address_width is byte aligned
     )
     port map (
         clk => clk,
-        data_in => mem_in.dm_data_out,
+        data_in => ram_data_in,
         data_out => ram_data_out,
         addr => ram_addr,
         wr_en => ram_wr_en,
-        access_size => mem_in.dm_access_size
+        access_size => access_size
     );
 
     -- Memory mapped peripherals
-    memory_mapping : process(mem_in.dm_addr, ram_data_out)
+    memory_mapping : process(mem_in.dm_addr, ram_data_out, mem_in.dm_op, mem_in.reg_op)
     begin
         led <= (others => '0');
-        ram_addr <= (others => '0');
+        ram_addr <=  "01010101010";
         mem_out.dm_data_in_valid <= '0';
         mem_out.reg_data_in_valid <= '0';
         mem_out.dm_data_in <= X"DEADBEEF";
         mem_out.reg_data_in <= X"DEADBEEF";
+        ram_data_in <= X"DEADBEEF";
         ram_wr_en <= '0';
 
         -- Memory access (RAM)
         if mem_in.dm_op /= nop and mem_in.dm_addr < 2**ram_address_width then
             ram_addr <= mem_in.dm_addr(ram_addr'left downto 0);
+            ram_data_in <= mem_in.dm_data_out;
             if mem_in.dm_op = rd then
                 mem_out.dm_data_in_valid <= '1';
                 mem_out.dm_data_in <= ram_data_out;
@@ -94,9 +112,11 @@ begin
         -- Register acces - mapped to top 256 32-bit words of RAM
         elsif mem_in.reg_op /= nop then
             -- Register number is shifted left twice, given that RAM is byte-addressable
+            -- NLOG_REGS + 2, given that registers take up 2**(NLOG_REGS + 2) bytes.
             ram_addr <= 
                 (mem_in.reg_addr sll 2)
-                + to_unsigned((2**ram_address_width - 1 - 2**NLOG_REGS), ram_address_width);
+                + to_unsigned((2**(ram_address_width) - 2**(NLOG_REGS + 2)), ram_address_width);
+            ram_data_in <= mem_in.reg_data_out;
             if mem_in.reg_op = rd then
                 mem_out.reg_data_in <= ram_data_out;
                 mem_out.reg_data_in_valid <= '1';

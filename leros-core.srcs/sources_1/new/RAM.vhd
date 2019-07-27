@@ -15,7 +15,7 @@ entity RAM is
     Port (
         clk : in std_logic;
         data_in : in std_logic_vector(31 downto 0);
-        addr : in unsigned(size - 1 downto 0);
+        addr : in unsigned((size + 2) - 1 downto 0); -- byte addressable
         access_size : in ACCESS_SIZE_op;
         wr_en : in std_logic;
         data_out : out std_logic_vector(31 downto 0)
@@ -25,9 +25,8 @@ end RAM;
 architecture Behavioral of RAM is
 
     type mem_arr is array((2**size) downto 0) of std_logic_vector(31 downto 0);
-    signal mem : mem_arr;
+    signal mem : mem_arr := (others => (others => '0'));
 
-    signal b0, b1, b2, b3 : std_logic_vector(7 downto 0);
     signal data_read, data_write : std_logic_vector(31 downto 0);
 
 begin

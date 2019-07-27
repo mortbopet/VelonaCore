@@ -16,8 +16,9 @@ entity Control is
         alu_op1_ctrl : out ALU_OP1_op;
         alu_op2_ctrl : out ALU_OP2_op;
         br_ctrl : out BR_op;
-        dm_addr_en : out std_logic;
-        dm_access_size : out ACCESS_SIZE_op
+        dm_access_size : out ACCESS_SIZE_op;
+        dm_op : out MEM_op;
+        reg_op : out MEM_op
     );
 end Control;
 
@@ -31,7 +32,7 @@ begin
 
     -- ALU control
     with instr select
-        alu_ctrl <= add when add | addi | br | brz | brnz | brp | brn,
+        alu_ctrl <= add when add | addi | br | brz | brnz | brp | brn | jal,
                     sub when sub | subi,
                     shra when shra,
                     alu_and when andr | andi,
@@ -42,7 +43,7 @@ begin
                     loadh2i when loadh2i,
                     loadh3i when loadh3i,
                     nop when others;
-    
+
     -- Accumulator control
     with instr select
         acc_ctrl <= wr when add | addi | sub | subi | shra | load | loadi |
@@ -51,15 +52,22 @@ begin
                     nop when others;
 
     -- Data memory control
-    with instr select 
-        dm_addr_en <= '1' when ldind | ldindb | ldindh | stind | stindb | stindh,
-                      '0' when others;
+    with instr select
+        dm_op <= rd when ldind | ldindb | ldindh,
+                 wr when stind | stindb | stindh,
+                 nop when others;
 
     with instr select
         dm_access_size <= byte when ldindb | stindb,
                           half when ldindh | stindh,
                           word when ldind | stind,
                           byte when others;
+
+    -- Register control
+    with instr select
+        reg_op <= rd when add | sub | andr | orr | xorr | load,
+                  wr when store | jal,
+                  nop when others;
 
     -- Immediate control
     with instr select
@@ -73,7 +81,7 @@ begin
                     shl1 when stindh | ldindh,
                     shl2 when stind | ldind,
                     nop when others;
-    
+
     -- ALU Operand selection
     with instr select
         alu_op1_ctrl <= pc when jal | br | brz | brnz | brp | brn,
