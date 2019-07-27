@@ -81,9 +81,10 @@ begin
                         acc when others;
 
     with instr select
-        alu_op2_ctrl <= imm when addi | subi | andi | xori | jal | loadi |
+        alu_op2_ctrl <= imm when addi | subi | andi | xori | jal |
                            br | brz | brnz | brp | brn |
-                           ldind | ldindh | ldindb | stind | stindh | stindb,
+                           ldind | ldindh | ldindb | stind | stindh | stindb |
+                           loadi | loadhi | loadh2i | loadh3i,
                         reg when others;
 
     -- Branch unit control
