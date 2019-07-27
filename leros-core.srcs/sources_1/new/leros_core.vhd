@@ -24,7 +24,6 @@ architecture Behavioral of Leros_core is
     signal alu_op1_ctrl : ALU_OP1_op; 
     signal alu_op2_ctrl : ALU_OP2_op;
     signal do_branch : std_logic;
-    signal dm_addr_en : std_logic;
 
     -- Entity output signals
     signal alu_op1 : signed(REG_WIDTH - 1 downto 0);

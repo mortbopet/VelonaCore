@@ -11,7 +11,8 @@ entity ROM is
     );
     Port (
         addr : in unsigned(addr_width - 1 downto 0);
-        data_out : out std_logic_vector(data_width - 1 downto 0)
+        data_out : out std_logic_vector(data_width - 1 downto 0);
+        data_valid : out std_logic
     );
 end ROM;
 
@@ -50,5 +51,14 @@ architecture Behavioral of ROM is
 begin
 
     data_out <= mem(to_integer(addr));
+
+    process(addr)
+    begin
+        if addr >= 2**addr_width then
+            data_valid <= '0';
+        else
+            data_valid <= '1';
+        end if;
+    end process;
 
 end Behavioral;

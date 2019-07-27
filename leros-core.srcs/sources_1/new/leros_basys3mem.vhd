@@ -69,7 +69,8 @@ begin
     )
     port map (
         addr => mem_in.im_addr(rom_address_width - 1 downto 0),
-        data_out => mem_out.im_data
+        data_out => mem_out.im_data,
+        data_valid => mem_out.im_data_valid
     );
 
     -- 1kB RAM
@@ -93,8 +94,8 @@ begin
         ram_addr <=  "01010101010";
         mem_out.dm_data_valid <= '0';
         mem_out.reg_data_valid <= '0';
-        mem_out.dm_data <= X"DEADBEEF";
-        mem_out.reg_data <= X"DEADBEEF";
+        mem_out.dm_data <= (others => '0');
+        mem_out.reg_data <= (others => '0');
         ram_data_in <= X"DEADBEEF";
         ram_wr_en <= '0';
 
