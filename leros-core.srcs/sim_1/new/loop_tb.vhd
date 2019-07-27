@@ -17,10 +17,10 @@ architecture Behavioral of loop_tb is
 
 begin
     
-    mem_tocore.dm_data_in <= (others => '0');
-    mem_tocore.dm_data_in_valid <= '0';
-    mem_tocore.reg_data_in <= (others => '0');
-    mem_tocore.im_data_in_valid <= '1';
+    mem_tocore.dm_data <= (others => '0');
+    mem_tocore.dm_data_valid <= '0';
+    mem_tocore.reg_data <= (others => '0');
+    mem_tocore.im_data_valid <= '1';
 
     Core_ent :  entity work.Leros_core
     port map (
@@ -32,7 +32,7 @@ begin
 
     MemorySystem : entity work.LEROSB3MEM
         generic  map (
-            rom_init_file => "loop_data.txt"
+            rom_init_file => "blink.c.txt"
         )
         port map (
             clk => clk,

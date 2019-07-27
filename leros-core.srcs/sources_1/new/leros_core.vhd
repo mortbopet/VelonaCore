@@ -74,14 +74,14 @@ begin
 
     IMM_ent : entity work.IMM
     port map (
-        instr => mem_in.im_data_in,
+        instr => mem_in.im_data,
         ctrl => imm_ctrl,
         imm => immediate
     );
 
     DECODE_ent : entity work.InstrDecoder
     port map (
-        instr => mem_in.im_data_in,
+        instr => mem_in.im_data,
         op => instr_op
     );
 
@@ -92,20 +92,20 @@ begin
                    signed(addr_reg) when addr;
 
     with alu_op2_ctrl select
-        alu_op2 <= signed(mem_in.reg_data_in) when reg,
+        alu_op2 <= signed(mem_in.reg_data) when reg,
                    immediate when imm;
 
 
     -- Memory I/O logic
     mem_out.im_addr <= pc_reg;
-    mem_out.dm_data_out <= acc_reg;
+    mem_out.dm_data <= acc_reg;
     mem_out.dm_addr <= unsigned(alu_res);
 
     -- Register I/O logic
     with instr_op select
-        mem_out.reg_data_out <= std_logic_vector(alu_res) when jal,
+        mem_out.reg_data <= std_logic_vector(alu_res) when jal,
                                 acc_reg when others;
-    mem_out.reg_addr <= unsigned(mem_in.im_data_in(7 downto 0));
+    mem_out.reg_addr <= unsigned(mem_in.im_data(7 downto 0));
 
     -- Clocking logic
     process(clk, do_branch, instr_op) is

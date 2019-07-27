@@ -69,7 +69,7 @@ begin
     )
     port map (
         addr => mem_in.im_addr(rom_address_width - 1 downto 0),
-        data_out => mem_out.im_data_in
+        data_out => mem_out.im_data
     );
 
     -- 1kB RAM
@@ -91,20 +91,20 @@ begin
     begin
         led <= (others => '0');
         ram_addr <=  "01010101010";
-        mem_out.dm_data_in_valid <= '0';
-        mem_out.reg_data_in_valid <= '0';
-        mem_out.dm_data_in <= X"DEADBEEF";
-        mem_out.reg_data_in <= X"DEADBEEF";
+        mem_out.dm_data_valid <= '0';
+        mem_out.reg_data_valid <= '0';
+        mem_out.dm_data <= X"DEADBEEF";
+        mem_out.reg_data <= X"DEADBEEF";
         ram_data_in <= X"DEADBEEF";
         ram_wr_en <= '0';
 
         -- Memory access (RAM)
         if mem_in.dm_op /= nop and mem_in.dm_addr < 2**ram_address_width then
             ram_addr <= mem_in.dm_addr(ram_addr'left downto 0);
-            ram_data_in <= mem_in.dm_data_out;
+            ram_data_in <= mem_in.dm_data;
             if mem_in.dm_op = rd then
-                mem_out.dm_data_in_valid <= '1';
-                mem_out.dm_data_in <= ram_data_out;
+                mem_out.dm_data_valid <= '1';
+                mem_out.dm_data <= ram_data_out;
             else
                 ram_wr_en <= '1';
             end if;
@@ -116,17 +116,17 @@ begin
             ram_addr <= 
                 (mem_in.reg_addr sll 2)
                 + to_unsigned((2**(ram_address_width) - 2**(NLOG_REGS + 2)), ram_address_width);
-            ram_data_in <= mem_in.reg_data_out;
+            ram_data_in <= mem_in.reg_data;
             if mem_in.reg_op = rd then
-                mem_out.reg_data_in <= ram_data_out;
-                mem_out.reg_data_in_valid <= '1';
+                mem_out.reg_data <= ram_data_out;
+                mem_out.reg_data_valid <= '1';
             else
                 ram_wr_en <= '1';
             end if;
 
         -- Peripheral access through memory mapping
         elsif (mem_in.dm_addr = led_addr) and (mem_in.dm_op = wr) then
-            led <= mem_in.dm_data_out(15 downto 0);
+            led <= mem_in.dm_data(15 downto 0);
         end if;
     end process;
 
