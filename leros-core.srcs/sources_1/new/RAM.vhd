@@ -39,7 +39,7 @@ begin
                       data_read(31 downto 16) & data_in(15 downto 0) when half,
                       data_read(31 downto 8) & data_in(7 downto 0) when byte;
 
-    read_out : process(access_size)
+    read_out : process(access_size, data_read)
     begin
         if access_size = word then
             data_out <= data_read;
