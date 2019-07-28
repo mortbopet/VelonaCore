@@ -23,7 +23,7 @@ begin
                 resize(signed(instr(7 downto 0)), imm'length) sll 8 when loadhi,
                 resize(signed(instr(7 downto 0)), imm'length) sll 16 when loadh2i,
                 resize(signed(instr(7 downto 0)), imm'length) sll 24 when loadh3i,
-                resize(signed(instr(11 downto 0)), imm'length) when branch,
+                resize(signed(instr(11 downto 0)), imm'length) sll 1 when branch,
                 to_signed(2, imm'length) when jal;
 
 end Behavioral;
