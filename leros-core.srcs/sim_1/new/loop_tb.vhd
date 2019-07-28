@@ -16,11 +16,6 @@ architecture Behavioral of loop_tb is
     signal mem_fromcore : LEROS_MEM_OUT;
 
 begin
-    
-    mem_tocore.dm_data <= (others => '0');
-    mem_tocore.dm_data_valid <= '0';
-    mem_tocore.reg_data <= (others => '0');
-    mem_tocore.im_data_valid <= '1';
 
     Core_ent :  entity work.Leros_core
     port map (
