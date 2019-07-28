@@ -111,24 +111,25 @@ begin
     end process;
 
     -- Assign memory access signals to RAM/Registers
-    assign_memsigs : process(mem_dest)
+    assign_memsigs : process(ram_data_out, mem_dest, mem_in.dm_data, mem_in.reg_data, mem_in.dm_op, mem_in.reg_op)
     begin
-        ram_addr <=  (others => 'Z');
+        ram_addr <=  (others => '-');
         mem_out.dm_data_valid <= '0';
         mem_out.reg_data_valid <= '0';
-        mem_out.dm_data <= (others => 'Z');
-        mem_out.reg_data <= (others => 'Z');
-        ram_data_in <= (others => 'Z');
         ram_wr_en <= '0';
+
+        mem_out.dm_data <= (others => '-');
+        mem_out.reg_data <= (others => '-');
+        ram_data_in <= (others => '-');
 
         -- Memory access (RAM)
         if mem_dest = ram then
             ram_addr <= mem_in.dm_addr(ram_address_width - 1 downto 0);
-            ram_data_in <= mem_in.dm_data;
             if mem_in.dm_op = rd then
                 mem_out.dm_data_valid <= '1';
                 mem_out.dm_data <= ram_data_out;
             else
+                ram_data_in <= mem_in.dm_data;
                 ram_wr_en <= '1';
             end if;
         
@@ -136,14 +137,13 @@ begin
         elsif mem_dest = reg then
             -- Register number is shifted left twice, given that RAM is byte-addressable
             -- NLOG_REGS + 2, given that registers take up 2**(NLOG_REGS + 2) bytes.
-            ram_addr <= 
-                (mem_in.reg_addr sll 2)
+            ram_addr <=  (mem_in.reg_addr sll 2)
                 + to_unsigned((2**(ram_address_width) - 2**(NLOG_REGS + 2)), ram_address_width);
-            ram_data_in <= mem_in.reg_data;
             if mem_in.reg_op = rd then
                 mem_out.reg_data <= ram_data_out;
                 mem_out.reg_data_valid <= '1';
             else
+                ram_data_in <= mem_in.reg_data;
                 ram_wr_en <= '1';
             end if;
         end if;
@@ -151,7 +151,7 @@ begin
 
     -- Each memory mapped peripheral will have a set of registers assigned to the memory
     -- addresses. These peripherals shall be assigned in the following clocked process
-    peripherals : process(clk)
+    peripherals : process(clk, mem_dest)
     begin
         if rising_edge(clk) then
             if rst = '1' then

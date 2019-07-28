@@ -27,6 +27,13 @@ package Common is
         rd
     );
 
+    type ACC_SRC_op is (
+        acc,
+        alu,
+        reg,
+        dm
+    );
+
     type ALU_OP1_op is (
         acc,
         pc,

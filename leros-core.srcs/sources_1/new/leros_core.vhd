@@ -18,7 +18,7 @@ architecture Behavioral of Leros_core is
 
     -- Control signals
     signal alu_ctrl : ALU_op;
-    signal acc_ctrl : MEM_op;
+    signal acc_ctrl : ACC_SRC_op;
     signal br_ctrl : BR_op;
     signal imm_ctrl : IMM_op;
     signal alu_op1_ctrl : ALU_OP1_op; 
@@ -97,13 +97,16 @@ begin
 
     -- Memory I/O logic
     mem_out.im_addr <= pc_reg;
-    mem_out.dm_data <= acc_reg;
+    with instr_op select
+        mem_out.dm_data <= acc_reg when stind | stindb | stindh,
+                           (others => '-') when others;
     mem_out.dm_addr <= unsigned(alu_res);
 
     -- Register I/O logic
     with instr_op select
         mem_out.reg_data <= std_logic_vector(alu_res) when jal,
-                                acc_reg when others;
+                            acc_reg when store,
+                            (others => '-') when others;
     mem_out.reg_addr <= unsigned(mem_in.im_data(7 downto 0));
 
     -- Clocking logic
@@ -125,8 +128,12 @@ begin
                     end if;
 
                     -- Next cycle accumulator logic
-                    if acc_ctrl = wr then
+                    if acc_ctrl = alu then
                         acc_reg <= std_logic_vector(alu_res);
+                    elsif acc_ctrl = reg then
+                        acc_reg <= mem_in.reg_data;
+                    elsif acc_ctrl = dm then
+                        acc_reg <= mem_in.dm_data;
                     end if;
                     
                     -- Next cycle address register logic

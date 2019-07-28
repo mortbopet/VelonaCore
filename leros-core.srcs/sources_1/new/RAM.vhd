@@ -26,19 +26,21 @@ architecture Behavioral of RAM is
 
     type mem_arr is array((2**size) downto 0) of std_logic_vector(31 downto 0);
     signal mem : mem_arr := (others => (others => '0'));
+    signal word_addr : unsigned(size - 1 downto 0);
 
     signal data_read, data_write : std_logic_vector(31 downto 0);
 
 begin
 
-    data_read <= mem(to_integer(addr srl 2));
+    word_addr <= addr(addr'left downto 2);
+    data_read <= mem(to_integer(word_addr));
 
     with access_size select
         data_write <= data_in when word,
                       data_read(31 downto 16) & data_in(15 downto 0) when half,
                       data_read(31 downto 8) & data_in(7 downto 0) when byte;
 
-    read_out : process(access_size, data_read)
+    read_out : process(access_size, addr)
     begin
         if access_size = word then
             data_out <= data_read;
@@ -55,7 +57,7 @@ begin
         elsif access_size = byte and addr(1 downto 0) = "11" then
             data_out <= X"000000" & data_read(31 downto 24);
         else
-            data_out <= (others => 'Z');
+            data_out <= (others => '-');
         end if;
     end process;
 
@@ -63,12 +65,9 @@ begin
     begin
         if rising_edge(clk) then
             if wr_en = '1' then
-                mem(to_integer(addr srl 2)) <= data_write;
+                mem(to_integer(word_addr)) <= data_write;
             end if;
         end if;
     end process;
-
-    data_out <= data_read;
-
 
 end Behavioral;

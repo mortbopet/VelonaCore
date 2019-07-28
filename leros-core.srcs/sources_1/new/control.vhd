@@ -10,7 +10,7 @@ entity Control is
 
         -- Control outputs
         alu_ctrl : out ALU_op;
-        acc_ctrl : out MEM_op;
+        acc_ctrl : out ACC_SRC_op;
         dm_ctrl : out MEM_op;
         imm_ctrl : out IMM_op;
         alu_op1_ctrl : out ALU_OP1_op;
@@ -47,10 +47,14 @@ begin
 
     -- Accumulator control
     with instr select
-        acc_ctrl <= wr when add | addi | sub | subi | shra | load | loadi |
-                            andr | andi | orr | ori | xorr | xori | loadhi |
-                            loadh2i | loadh3i | ldind | ldindb | ldindh,
-                    nop when others;
+        acc_ctrl <= alu when add | addi | sub | subi | shra | loadi |
+                             andr | andi | orr | ori | xorr | xori | loadhi |
+                             loadh2i | loadh3i ,
+                    dm  when ldind | ldindb | ldindh,
+                    reg when load,
+                    acc when others;
+
+    
 
     -- Data memory control
     with instr select
