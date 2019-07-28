@@ -74,7 +74,8 @@ begin
         init_file => rom_init_file
     )
     port map (
-        addr => mem_in.im_addr(rom_address_width - 1 downto 0),
+        -- ROM is half-word aligned access, mem_in.im_addr is byte-aligned
+        addr => '0' & mem_in.im_addr(rom_address_width - 1 downto 1),
         data_out => mem_out.im_data,
         data_valid => mem_out.im_data_valid
     );

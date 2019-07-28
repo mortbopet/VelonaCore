@@ -124,7 +124,7 @@ begin
                     elsif instr_op = jal then
                         pc_reg <= unsigned(acc_reg);
                     else
-                        pc_reg <= pc_reg + 1;
+                        pc_reg <= pc_reg + 2;
                     end if;
 
                     -- Next cycle accumulator logic
@@ -138,7 +138,7 @@ begin
                     
                     -- Next cycle address register logic
                     if instr_op = ldaddr then
-                        addr_reg <= unsigned(acc_reg);
+                        addr_reg <= unsigned(mem_in.reg_data);
                     end if;
                 end if;
             end if;

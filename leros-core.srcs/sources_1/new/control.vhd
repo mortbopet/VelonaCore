@@ -70,7 +70,7 @@ begin
 
     -- Register control
     with instr select
-        reg_op <= rd when add | sub | andr | orr | xorr | load,
+        reg_op <= rd when add | sub | andr | orr | xorr | load | ldaddr,
                   wr when store | jal,
                   nop when others;
 
