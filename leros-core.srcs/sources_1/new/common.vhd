@@ -41,6 +41,7 @@ package Common is
     );
 
     type ALU_OP2_op is (
+        unused,
         reg,
         imm
     );

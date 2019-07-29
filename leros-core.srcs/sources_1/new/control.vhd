@@ -11,7 +11,6 @@ entity Control is
         -- Control outputs
         alu_ctrl : out ALU_op;
         acc_ctrl : out ACC_SRC_op;
-        dm_ctrl : out MEM_op;
         imm_ctrl : out IMM_op;
         alu_op1_ctrl : out ALU_OP1_op;
         alu_op2_ctrl : out ALU_OP2_op;
@@ -98,7 +97,8 @@ begin
                            br | brz | brnz | brp | brn |
                            ldind | ldindh | ldindb | stind | stindh | stindb |
                            loadi | loadhi | loadh2i | loadh3i,
-                        reg when others;
+                        reg when add | sub | andr | orr | xorr,
+                        unused when others;
 
     -- Branch unit control
     with instr select

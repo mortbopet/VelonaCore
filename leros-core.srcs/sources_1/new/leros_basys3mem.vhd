@@ -16,7 +16,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-
 use work.Common.all;
 
 entity LEROSB3MEM is
@@ -48,6 +47,8 @@ architecture Behavioral of LEROSB3MEM is
     signal ram_data_out : std_logic_vector(REG_WIDTH-1 downto 0);
     signal ram_addr : unsigned(ram_address_width - 1 downto 0);
     signal ram_wr_en : std_logic;
+    
+    signal rom_addr : unsigned(rom_address_width - 1 downto 0);
 
     signal access_size : ACCESS_SIZE_op;
     signal ram_data_in : std_logic_vector(REG_WIDTH - 1 downto 0);
@@ -67,6 +68,8 @@ begin
         end if;
     end process;
 
+    -- ROM
+    rom_addr <= '0' & mem_in.im_addr(rom_address_width - 1 downto 1);
     Instr_mem : entity work.ROM
     generic map (
         data_width => INSTR_WIDTH,
@@ -75,7 +78,7 @@ begin
     )
     port map (
         -- ROM is half-word aligned access, mem_in.im_addr is byte-aligned
-        addr => '0' & mem_in.im_addr(rom_address_width - 1 downto 1),
+        addr => rom_addr,
         data_out => mem_out.im_data,
         data_valid => mem_out.im_data_valid
     );

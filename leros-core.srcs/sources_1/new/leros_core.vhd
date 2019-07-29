@@ -31,6 +31,8 @@ architecture Behavioral of Leros_core is
     signal alu_res : signed(REG_WIDTH - 1 downto 0);
     signal immediate : signed(REG_WIDTH-1 downto 0);
     signal instr_op : LEROS_op;
+    signal reg_op : MEM_op;
+    signal dm_op : MEM_op;
 
     -- Registers
     signal acc_reg : std_logic_vector(REG_WIDTH - 1 downto 0) := (others => '0');
@@ -49,8 +51,8 @@ begin
         alu_op2_ctrl => alu_op2_ctrl,
         br_ctrl => br_ctrl,
         dm_access_size => mem_out.dm_access_size,
-        dm_op => mem_out.dm_op,
-        reg_op => mem_out.reg_op
+        dm_op => dm_op,
+        reg_op => reg_op
     );
 
     ALU_ent : entity work.ALU
@@ -92,22 +94,30 @@ begin
 
     with alu_op2_ctrl select
         alu_op2 <= signed(mem_in.reg_data) when reg,
-                   immediate when imm;
+                   immediate when imm,
+                   (others => '0') when unused;
 
 
     -- Memory I/O logic
+    mem_out.dm_op <= dm_op;
     mem_out.im_addr <= pc_reg;
-    with instr_op select
-        mem_out.dm_data <= acc_reg when stind | stindb | stindh,
+    with dm_op select
+        mem_out.dm_data <= acc_reg when wr,
                            (others => '-') when others;
-    mem_out.dm_addr <= unsigned(alu_res);
+    with dm_op select
+        mem_out.dm_addr <= unsigned(alu_res) when wr | rd,
+                            (others => '-') when others;
 
     -- Register I/O logic
+    mem_out.reg_op <= reg_op;
     with instr_op select
         mem_out.reg_data <= std_logic_vector(alu_res) when jal,
                             acc_reg when store,
                             (others => '-') when others;
-    mem_out.reg_addr <= unsigned(mem_in.im_data(7 downto 0));
+    
+    with reg_op select
+        mem_out.reg_addr <= unsigned(mem_in.im_data(7 downto 0)) when rd | wr,
+                            (others => '-') when others;
 
     -- Clocking logic
     process(clk, do_branch, instr_op) is
