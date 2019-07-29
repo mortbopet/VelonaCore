@@ -71,7 +71,7 @@ begin
     end process;
 
     -- ROM
-    rom_addr <= '0' & mem_in.im_addr(rom_address_width - 1 downto 1);
+    rom_addr <= mem_in.im_addr(rom_address_width downto 1);
     Instr_mem : entity work.ROM
     generic map (
         data_width => INSTR_WIDTH,
@@ -120,7 +120,8 @@ begin
 
     -- Assign memory access signals to RAM/Registers
     assign_memsigs : process(ram_data_out, mem_dest, mem_in.dm_data,
-        mem_in.reg_data, mem_in.dm_op, mem_in.reg_op, ram_data_out_valid)
+        mem_in.reg_data, mem_in.dm_op, mem_in.reg_op, ram_data_out_valid,
+        mem_in.dm_addr, mem_in.reg_addr)
     begin
         ram_addr <=  (others => '-');
         mem_out.dm_data_valid <= '0';
