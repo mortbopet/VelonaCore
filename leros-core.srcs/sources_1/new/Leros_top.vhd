@@ -28,7 +28,7 @@ begin
 
     MemorySystem : entity work.LEROSB3MEM
         generic  map (
-            rom_init_file => ""
+            rom_init_file => "blink.c.txt"
         )
         port map (
             clk => clk,
