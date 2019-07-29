@@ -45,8 +45,10 @@ architecture Behavioral of LEROSB3MEM is
 
 
     signal ram_data_out : std_logic_vector(REG_WIDTH-1 downto 0);
+    signal ram_data_out_valid : std_logic;
     signal ram_addr : unsigned(ram_address_width - 1 downto 0);
     signal ram_wr_en : std_logic;
+    signal ram_rd_en : std_logic;
     
     signal rom_addr : unsigned(rom_address_width - 1 downto 0);
 
@@ -94,6 +96,8 @@ begin
         data_out => ram_data_out,
         addr => ram_addr,
         wr_en => ram_wr_en,
+        rd_en => ram_rd_en,
+        data_out_valid => ram_data_out_valid,
         access_size => access_size
     );
 
@@ -115,12 +119,14 @@ begin
     end process;
 
     -- Assign memory access signals to RAM/Registers
-    assign_memsigs : process(ram_data_out, mem_dest, mem_in.dm_data, mem_in.reg_data, mem_in.dm_op, mem_in.reg_op)
+    assign_memsigs : process(ram_data_out, mem_dest, mem_in.dm_data,
+        mem_in.reg_data, mem_in.dm_op, mem_in.reg_op, ram_data_out_valid)
     begin
         ram_addr <=  (others => '-');
         mem_out.dm_data_valid <= '0';
         mem_out.reg_data_valid <= '0';
         ram_wr_en <= '0';
+        ram_rd_en <= '0';
 
         mem_out.dm_data <= (others => '-');
         mem_out.reg_data <= (others => '-');
@@ -130,8 +136,9 @@ begin
         if mem_dest = ram then
             ram_addr <= mem_in.dm_addr(ram_address_width - 1 downto 0);
             if mem_in.dm_op = rd then
-                mem_out.dm_data_valid <= '1';
+                mem_out.dm_data_valid <= ram_data_out_valid;
                 mem_out.dm_data <= ram_data_out;
+                ram_rd_en <= '1';
             else
                 ram_data_in <= mem_in.dm_data;
                 ram_wr_en <= '1';
@@ -145,7 +152,8 @@ begin
                 + to_unsigned((2**(ram_address_width) - 2**(NLOG_REGS + 2)), ram_address_width);
             if mem_in.reg_op = rd then
                 mem_out.reg_data <= ram_data_out;
-                mem_out.reg_data_valid <= '1';
+                mem_out.reg_data_valid <= ram_data_out_valid;
+                ram_rd_en <= '1';
             else
                 ram_data_in <= mem_in.reg_data;
                 ram_wr_en <= '1';

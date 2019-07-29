@@ -39,6 +39,9 @@ architecture Behavioral of Leros_core is
     signal addr_reg : unsigned(REG_WIDTH - 1 downto 0) := (others => '0');
     signal pc_reg : unsigned(REG_WIDTH - 1 downto 0) := (others => '0');
 
+    -- ready signal: Indicates that next state may be taken
+    signal ready : std_logic;
+
 begin
 
     CONTROL_ent : entity work.Control
@@ -86,6 +89,13 @@ begin
         op => instr_op
     );
 
+    STATE_ent : entity work.State
+    port map (
+        instr => instr_op,
+        mem_in => mem_in,
+        ready => ready
+    );
+
     -- ALU logic
     with alu_op1_ctrl select
         alu_op1 <= signed(pc_reg) when pc,
@@ -127,7 +137,7 @@ begin
                     pc_reg <= (others => '0');
                     acc_reg <= (others => '0');
                     addr_reg <= (others => '0');
-                else
+                elsif ready = '1' then 
                     -- Next cycle PC logic
                     if do_branch = '1' then
                         pc_reg <= unsigned(alu_res);
