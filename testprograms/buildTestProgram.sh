@@ -14,6 +14,7 @@ LINKER_SCRIPT="leros.ld"
 
 ELFFILE=${2}.out
 BINFILE=${2}.bin
+DISFILE=${2}.dis
 DEST=../leros-core.srcs/sources_1/new/
 
 # Compile
@@ -25,9 +26,12 @@ $1/llvm-objcopy -O binary $ELFFILE $BINFILE
 # Convert binary to text
 python bintotxt.py $BINFILE
 
+# Write a disassembled file for debugging purposes
+$1/llvm-objdump --disassemble $ELFFILE > $DISFILE
+
 # Move to source folder
 mv $2.txt $DEST
 
 # Cleanup
-rm $BINFILE
-rm $ELFFILE
+# rm $BINFILE
+# rm $ELFFILE
