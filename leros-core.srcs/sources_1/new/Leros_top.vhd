@@ -7,6 +7,7 @@ use work.Common.all;
 entity Leros_top is
     Port (
         led : out std_logic_vector(15 downto 0);
+        sw  : in std_logic_vector(15 downto 0);
         clk : in std_logic
     );
 end Leros_top;
@@ -21,21 +22,22 @@ begin
     Core_ent :  entity work.Leros_core
     port map (
         mem_out => mem_fromcore,
-        mem_in => mem_tocore,
+        mem_in => mem_tocore, 
         clk => clk, 
         rst => '0'
     );
 
     MemorySystem : entity work.LEROSB3MEM
         generic  map (
-            rom_init_file => "blink.c.txt"
+            rom_init_file => "triangle.c.txt"
         )
         port map (
             clk => clk,
             rst => '0',
             mem_out => mem_tocore,
             mem_in => mem_fromcore,
-            leds => led
+            leds => led,
+            sw => sw
         );
 
 end Behavioral;

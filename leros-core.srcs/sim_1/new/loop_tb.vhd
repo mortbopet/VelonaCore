@@ -15,6 +15,8 @@ architecture Behavioral of loop_tb is
     signal mem_tocore : LEROS_MEM_IN;
     signal mem_fromcore : LEROS_MEM_OUT;
 
+    signal sw : std_logic_vector(15 downto 0) := X"0005";
+
 begin
 
     Core_ent :  entity work.Leros_core
@@ -27,13 +29,14 @@ begin
 
     MemorySystem : entity work.LEROSB3MEM
         generic  map (
-            rom_init_file => "blink.c.txt"
+            rom_init_file => "triangle.c.txt"
         )
         port map (
             clk => clk,
             rst => rst,
             mem_out => mem_tocore,
-            mem_in => mem_fromcore
+            mem_in => mem_fromcore,
+            sw => sw
         );
     
     clk_process :process

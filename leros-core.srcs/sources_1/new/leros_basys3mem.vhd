@@ -3,7 +3,9 @@
 -- memory mapping for board peripherals on a basys3 board
 
 -- Memory map:
--- 0x9FFF0004  _______
+--            ________
+--            |   sw  |
+-- 0x9FFF0004 |_______|
 --            |  LEDs |
 -- 0x9FFF0000 |_______|
 --            |_______|
@@ -26,17 +28,20 @@ entity LEROSB3MEM is
       clk, rst : in std_logic;
       mem_out : out LEROS_MEM_IN;
       mem_in : in LEROS_MEM_OUT;
-      leds : out std_logic_vector(15 downto 0)
+      leds : out std_logic_vector(15 downto 0);
+      sw : in std_logic_vector(15 downto 0)
   );
 end LEROSB3MEM;
 
 architecture Behavioral of LEROSB3MEM is
 
     -- Add any peripherals as a memory destination
-    type mem_dest_t is (invalid, ram, reg, led);
+    type mem_dest_t is (invalid, ram, reg, led, switches);
     signal mem_dest : mem_dest_t := invalid;
 
     constant led_addr : unsigned(REG_WIDTH - 1 downto 0) := X"9FFF0000";
+    constant sw_addr : unsigned(REG_WIDTH - 1 downto 0) := X"9FFF0004";
+
     -- RAM size is specified in words, but ibyte indexed
     -- 2**(11 - 2) * 4 B = 2kB RAM
     constant ram_address_width : integer := 11;
@@ -56,6 +61,7 @@ architecture Behavioral of LEROSB3MEM is
     signal ram_data_in : std_logic_vector(REG_WIDTH - 1 downto 0);
 
     signal leds_reg : std_logic_vector(15 downto 0);
+    signal sw_reg : std_logic_vector(15 downto 0);
 
 begin
 
@@ -113,6 +119,8 @@ begin
         -- Peripheral access through memory mapping
         elsif (mem_in.dm_addr = led_addr) and (mem_in.dm_op = wr) then
             mem_dest <= led;
+        elsif (mem_in.dm_addr = sw_addr) and (mem_in.dm_op = rd) then
+            mem_dest <= switches;
         else
             mem_dest <= invalid;
         end if;
@@ -159,6 +167,11 @@ begin
                 ram_data_in <= mem_in.reg_data;
                 ram_wr_en <= '1';
             end if;
+
+        -- Peripheral reads
+        elsif mem_dest = switches then
+            mem_out.dm_data <= X"0000" & sw_reg;
+            mem_out.dm_data_valid <= '1';
         end if;
     end process;
 
@@ -169,8 +182,10 @@ begin
         if rising_edge(clk) then
             if rst = '1' then
                 leds_reg <= (others => '0');
+                sw_reg <= (others => '0');
             elsif mem_dest = led then
                 leds_reg <= mem_in.dm_data(15 downto 0);
+                sw_reg <= sw;
             end if;
         end if;
     end process;
