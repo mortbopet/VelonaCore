@@ -40,7 +40,7 @@ ELFFILE=${2}.out
 BINFILE=${2}.bin
 DISFILE=${2}.dis
 ASFILE=${2}.as
-DEST=../VelonaCore.srcs/sources_1/new/
+DEST=../VelonaCore.srcs/sources_1/rom_init/
 
 # Compile
 $1/clang -target leros32 -Xlinker $LINKER_SCRIPT $2 -o $ELFFILE

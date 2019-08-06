@@ -29,7 +29,7 @@ begin
 
     MemorySystem : entity work.VelonaB3Mem
         generic  map (
-            rom_init_file => "triangle.c.txt"
+            rom_init_file => "../rom_init/triangle.c.txt"
         )
         port map (
             clk => clk,
