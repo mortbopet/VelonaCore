@@ -12,14 +12,14 @@ architecture Behavioral of loop_tb is
     signal clk, rst : std_logic;
     constant clk_period : time := 1 ns;
     
-    signal mem_tocore : LEROS_MEM_IN;
-    signal mem_fromcore : LEROS_MEM_OUT;
+    signal mem_tocore : Velona_Mem_in;
+    signal mem_fromcore : Velona_Mem_Out;
 
     signal sw : std_logic_vector(15 downto 0) := X"0005";
 
 begin
 
-    Core_ent :  entity work.Leros_core
+    Core_ent :  entity work.VelonaCore
     port map (
         mem_out => mem_fromcore,
         mem_in => mem_tocore,
@@ -27,7 +27,7 @@ begin
         rst => rst
     );
 
-    MemorySystem : entity work.LEROSB3MEM
+    MemorySystem : entity work.VelonaB3Mem
         generic  map (
             rom_init_file => "triangle.c.txt"
         )

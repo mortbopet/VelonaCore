@@ -6,7 +6,7 @@ use work.Common.all;
 entity State is
     Port (
         instr : LEROS_op;
-        mem_in : in LEROS_MEM_IN;
+        mem_in : in Velona_Mem_in;
         ready : out std_logic
     );
 end State;

@@ -20,20 +20,20 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.Common.all;
 
-entity LEROSB3MEM is
+entity VelonaB3Mem is
   generic (
       rom_init_file : string := ""
   );
   Port (
       clk, rst : in std_logic;
-      mem_out : out LEROS_MEM_IN;
-      mem_in : in LEROS_MEM_OUT;
+      mem_out : out Velona_Mem_in;
+      mem_in : in Velona_Mem_Out;
       leds : out std_logic_vector(15 downto 0);
       sw : in std_logic_vector(15 downto 0)
   );
-end LEROSB3MEM;
+end VelonaB3Mem;
 
-architecture Behavioral of LEROSB3MEM is
+architecture Behavioral of VelonaB3Mem is
 
     -- Add any peripherals as a memory destination
     type mem_dest_t is (invalid, ram, reg, led, switches);

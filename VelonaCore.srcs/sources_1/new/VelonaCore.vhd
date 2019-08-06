@@ -4,17 +4,17 @@ use IEEE.NUMERIC_STD.ALL;
 
 use work.Common.all;
 
-entity Leros_core is
+entity VelonaCore is
     port ( 
         clk : in std_logic;
         rst : in std_logic;
 
-        mem_in : in LEROS_MEM_IN;
-        mem_out : out LEROS_MEM_OUT
+        mem_in : in Velona_Mem_in;
+        mem_out : out Velona_Mem_Out
     );
-end Leros_core;
+end VelonaCore;
 
-architecture Behavioral of Leros_core is
+architecture Behavioral of VelonaCore is
 
     -- Control signals
     signal alu_ctrl : ALU_op;

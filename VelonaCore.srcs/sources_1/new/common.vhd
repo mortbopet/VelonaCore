@@ -110,7 +110,7 @@ package Common is
         brn
     );
 
-    type LEROS_MEM_IN is record
+    type Velona_Mem_in is record
         dm_data : std_logic_vector(REG_WIDTH-1 downto 0);
         dm_data_valid : std_logic;
 
@@ -119,9 +119,9 @@ package Common is
 
         im_data : std_logic_vector(INSTR_WIDTH - 1 downto 0);
         im_data_valid : std_logic;
-    end record LEROS_MEM_IN;
+    end record Velona_Mem_in;
 
-    type LEROS_MEM_OUT is record
+    type Velona_Mem_Out is record
         im_addr : unsigned(REG_WIDTH-1 downto 0);
 
         reg_addr : unsigned(NLOG_REGS - 1 downto 0);
@@ -132,7 +132,7 @@ package Common is
         dm_data : std_logic_vector(REG_WIDTH-1 downto 0);
         dm_op : MEM_op;
         dm_access_size : ACCESS_SIZE_op;
-    end record LEROS_MEM_OUT;
+    end record Velona_Mem_Out;
 
 
     constant NOP_OPC    : std_logic_vector(7 downto 0) := "00000---";
