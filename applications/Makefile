@@ -17,12 +17,11 @@
 #
 # ----------------------------------- Usage ------------------------------------
 # Source files for a given program should be placed in a subdirectory within
-# VelonaCore/applications/.
-# The file containing the main() function should be named identically to the
-# directory of which it is placed.
+# VelonaCore/applications/. The name of this subdirectory will be the
+# application target name.
 #
 # The application may then be built by invoking this makefile, as follows:
-# make TARGET=${application} LEROS_STACK_PTR=${init. stack ptr value}
+# make TARGET=${folder name} LEROS_STACK_PTR=${init. stack ptr value}
 #
 # Ie. to build the trianglenumber application with a stack pointer starting at
 # 0x3FC:

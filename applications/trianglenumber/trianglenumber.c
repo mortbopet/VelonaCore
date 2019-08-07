@@ -19,8 +19,8 @@ int triangle(int n)
 
 void main()
 {
-    volatile unsigned int *LEDS = LED_ADDR;
-    volatile unsigned int *SWITCHES = SW_ADDR;
+    volatile unsigned int *LEDS = BASYS3_LED_ADDR;
+    volatile unsigned int *SWITCHES = BASYS3_SW_ADDR;
     while (1)
         *LEDS = triangle(*SWITCHES);
 }
