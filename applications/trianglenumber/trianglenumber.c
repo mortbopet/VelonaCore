@@ -1,7 +1,7 @@
-#include "VelonaCore_basys3.h"
+#include "VelonaCore_Basys3.h"
 
-volatile unsigned int *LEDS = 0x9FFF0000;
-volatile unsigned int *SWITCHES = 0x9FFF0004;
+volatile unsigned int *LEDS = LED_ADDR;
+volatile unsigned int *SWITCHES = SW_ADDR;
 
 int triangle(int n)
 {
