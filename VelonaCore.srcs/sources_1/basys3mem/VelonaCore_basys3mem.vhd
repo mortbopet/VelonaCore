@@ -183,9 +183,11 @@ begin
             if rst = '1' then
                 leds_reg <= (others => '0');
                 sw_reg <= (others => '0');
-            elsif mem_dest = led then
-                leds_reg <= mem_in.dm_data(15 downto 0);
+            else
                 sw_reg <= sw;
+                if mem_dest = led then
+                    leds_reg <= mem_in.dm_data(15 downto 0);
+                end if;
             end if;
         end if;
     end process;
