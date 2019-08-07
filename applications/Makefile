@@ -10,7 +10,7 @@
 # ├── leros-lib
 # │   └─── runtime
 # └── VelonaCore
-#     └─── testprograms
+#     └─── applications <- you are here
 #
 # If this is not the case, specifying different LEROS_LIB_PATH and TC variables
 # to this makefile may point the makefile to the proper locations.

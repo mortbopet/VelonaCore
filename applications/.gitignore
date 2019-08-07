@@ -1,1 +1,5 @@
-*.o
+# The build system creates a lot of additional files in the application
+# subfolders. Ignore everything except source files
+*/**
+!*.c
+!*.h

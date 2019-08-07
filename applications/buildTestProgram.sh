@@ -43,9 +43,7 @@ ASFILE=${2}.as
 DEST=../VelonaCore.srcs/sources_1/rom_init/
 
 # Compile
-$1/clang -target leros32 -Xlinker $LINKER_SCRIPT $2 -o $ELFFILE
-$1/clang -target leros32 -S -Xlinker $LINKER_SCRIPT $2 -o $ASFILE
-
+make ${2}
 # Extract binary
 $1/llvm-objcopy -O binary $ELFFILE $BINFILE
 
@@ -57,7 +55,3 @@ $1/llvm-objdump --disassemble $ELFFILE > $DISFILE
 
 # Move to source folder
 mv $2.txt $DEST
-
-# Cleanup
-# rm $BINFILE
-# rm $ELFFILE
