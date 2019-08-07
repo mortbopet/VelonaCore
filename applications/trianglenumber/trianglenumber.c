@@ -1,7 +1,10 @@
 #include "VelonaCore_Basys3.h"
 
-volatile unsigned int *LEDS = LED_ADDR;
-volatile unsigned int *SWITCHES = SW_ADDR;
+/*
+ * Program, which reads the input switches of the Basys3 board, calculates the
+ * triangle number of this binary input, and outputs the result on the
+ * LEDs.
+ */
 
 int triangle(int n)
 {
@@ -16,6 +19,8 @@ int triangle(int n)
 
 void main()
 {
+    volatile unsigned int *LEDS = LED_ADDR;
+    volatile unsigned int *SWITCHES = SW_ADDR;
     while (1)
         *LEDS = triangle(*SWITCHES);
 }
