@@ -1,24 +1,10 @@
-----------------------------------------------------------------------------------
--- A simple memory system implementing instruction- and data memory as well as
--- memory mapping for board peripherals on a basys3 board
-
--- Memory map:
---            ________
---            |   sw  |
--- 0x9FFF0004 |_______|
---            |  LEDs |
--- 0x9FFF0000 |_______|
---            |_______|
--- 0x3FF      |       | <- Registers mapped as topmost 2**8 addresses
---            |  RAM  |
--- 0x0        |_______|
-----------------------------------------------------------------------------------
-
-
+-- refer to memorymap.md for for a description of the implemented memory map
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+
 use work.Common.all;
+use work.sevsegdriver_pkg.all;
 
 entity VelonaB3Mem is
   generic (
@@ -28,25 +14,32 @@ entity VelonaB3Mem is
       clk, rst : in std_logic;
       mem_out : out Velona_Mem_in;
       mem_in : in Velona_Mem_Out;
+
+
+      -- Basys3 I/O
       leds : out std_logic_vector(15 downto 0);
-      sw : in std_logic_vector(15 downto 0)
+      sw : in std_logic_vector(15 downto 0);
+      seg : out std_logic_vector(6 downto 0);
+      dp  : out std_logic;
+      an  : out std_logic_vector(3 downto 0)
   );
 end VelonaB3Mem;
 
 architecture Behavioral of VelonaB3Mem is
 
     -- Add any peripherals as a memory destination
-    type mem_dest_t is (invalid, ram, reg, led, switches);
+    type mem_dest_t is (invalid, ram, reg, led, switches, sevsegdis);
     signal mem_dest : mem_dest_t := invalid;
 
-    constant led_addr : unsigned(REG_WIDTH - 1 downto 0) := X"9FFF0000";
-    constant sw_addr : unsigned(REG_WIDTH - 1 downto 0) := X"9FFF0004";
+    constant led_addr : unsigned(REG_WIDTH - 1 downto 0)    := X"9FFF0000";
+    constant sw_addr : unsigned(REG_WIDTH - 1 downto 0)     := X"9FFF0004";
+    constant seg_addr : unsigned(REG_WIDTH - 1 downto 0)    := X"9FFF0100";
 
     -- RAM size is specified in words, but ibyte indexed
     -- 2**(11 - 2) * 4 B = 2kB RAM
     constant ram_address_width : integer := 11;
-    -- 2**8 * 2 B = 512B ROM
-    constant rom_address_width : integer := 8;
+    -- 2**9 * 2 B = 1kB ROM
+    constant rom_address_width : integer := 9;
 
 
     signal ram_data_out : std_logic_vector(REG_WIDTH-1 downto 0);
@@ -54,7 +47,7 @@ architecture Behavioral of VelonaB3Mem is
     signal ram_addr : unsigned(ram_address_width - 1 downto 0);
     signal ram_wr_en : std_logic;
     signal ram_rd_en : std_logic;
-    
+
     signal rom_addr : unsigned(rom_address_width - 1 downto 0);
 
     signal access_size : ACCESS_SIZE_op;
@@ -63,7 +56,31 @@ architecture Behavioral of VelonaB3Mem is
     signal leds_reg : std_logic_vector(15 downto 0);
     signal sw_reg : std_logic_vector(15 downto 0);
 
+    -- Seven segment display
+    signal seg_data : SevSeg;
+    signal seg_wr_en : std_logic_vector(SEVSEG_N - 1 downto 0);
+    signal seg_idx : integer range 0 to SEVSEG_N - 1;
+
 begin
+
+    sevsegdriver_ent : entity work.SevSegDriver
+    generic map (
+        segments => SEVSEG_N,
+        clk_freq => CLK_FREQ
+    )
+    port map (
+        clk => clk,
+        rst => rst,
+        seg_data => seg_data,
+        wr_en => seg_wr_en,
+        seg => seg,
+        dp => dp,
+        an => an
+    );
+
+    -- Seven segment addresses are aligned from address 0x9FFF0100 and up.
+    -- Bits 3 and 2 may then be used as the segment index
+    seg_idx <= to_integer(unsigned(mem_in.dm_addr(3 downto 2))) when mem_dest = sevsegdis else 0;
 
     access_size_proc : process(mem_in.reg_op, mem_in.dm_op)
     begin
@@ -121,15 +138,31 @@ begin
             mem_dest <= led;
         elsif (mem_in.dm_addr = sw_addr) and (mem_in.dm_op = rd) then
             mem_dest <= switches;
+        elsif (mem_in.dm_addr >= seg_addr) and (mem_in.dm_addr <= seg_addr + SEVSEG_N * 4) then
+            mem_dest <= sevsegdis;
         else
             mem_dest <= invalid;
+        end if;
+    end process;
+
+    assign_sevseg : process(mem_dest, mem_in.dm_data, seg_idx)
+    begin
+        if mem_dest = sevsegdis then
+            seg_wr_en <= (others => '0');
+            seg_wr_en(seg_idx) <= '1';
+            seg_data.seg <= mem_in.dm_data(6 downto 0);
+            seg_data.dp <= mem_in.dm_data(7);
+        else
+            seg_wr_en <= (others => '0');
+            seg_data.seg <= (others => '0');
+            seg_data.dp <= '0';
         end if;
     end process;
 
     -- Assign memory access signals to RAM/Registers
     assign_memsigs : process(ram_data_out, mem_dest, mem_in.dm_data,
         mem_in.reg_data, mem_in.dm_op, mem_in.reg_op, ram_data_out_valid,
-        mem_in.dm_addr, mem_in.reg_addr)
+        mem_in.dm_addr, mem_in.reg_addr, sw_reg)
     begin
         ram_addr <=  (others => '-');
         mem_out.dm_data_valid <= '0';
@@ -152,7 +185,7 @@ begin
                 ram_data_in <= mem_in.dm_data;
                 ram_wr_en <= '1';
             end if;
-        
+
         -- Register acces - mapped to top 256 32-bit words of RAM
         elsif mem_dest = reg then
             -- Register number is shifted left twice, given that RAM is byte-addressable

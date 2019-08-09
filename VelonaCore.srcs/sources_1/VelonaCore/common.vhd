@@ -3,6 +3,11 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 package Common is
+    -- Board info
+    constant CLK_FREQ : integer := 100000000;
+    constant SEVSEG_N : integer := 4; -- Number of seven-segment displays
+
+    -- ISA info
     constant INSTR_WIDTH : integer := 16;
     constant REG_WIDTH : integer := 32;
     constant NLOG_REGS : integer := 8; -- 2^8 registers

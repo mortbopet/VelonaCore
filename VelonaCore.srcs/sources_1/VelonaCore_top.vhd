@@ -6,9 +6,17 @@ use work.Common.all;
 
 entity VelonaCore_top is
     Port (
-        led : out std_logic_vector(15 downto 0);
+        clk : in std_logic;
+
+        -- Basys3 I/O
         sw  : in std_logic_vector(15 downto 0);
-        clk : in std_logic
+        led : out std_logic_vector(15 downto 0);
+
+        -- 7 Segment Display
+        seg : out std_logic_vector(6 downto 0);
+        dp  : out std_logic;
+        an  : out std_logic_vector(3 downto 0)
+
     );
 end VelonaCore_top;
 
@@ -22,14 +30,14 @@ begin
     Core_ent :  entity work.VelonaCore
     port map (
         mem_out => mem_fromcore,
-        mem_in => mem_tocore, 
-        clk => clk, 
+        mem_in => mem_tocore,
+        clk => clk,
         rst => '0'
     );
 
     MemorySystem : entity work.VelonaB3Mem
         generic  map (
-            rom_init_file => "../rom_init/trianglenumber.txt"
+            rom_init_file => "../rom_init/sevensegment.txt"
         )
         port map (
             clk => clk,
@@ -37,7 +45,10 @@ begin
             mem_out => mem_tocore,
             mem_in => mem_fromcore,
             leds => led,
-            sw => sw
+            sw => sw,
+            seg => seg,
+            dp => dp,
+            an => an
         );
 
 end Behavioral;

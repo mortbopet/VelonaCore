@@ -11,7 +11,7 @@ architecture Behavioral of loop_tb is
 
     signal clk, rst : std_logic;
     constant clk_period : time := 1 ns;
-    
+
     signal mem_tocore : Velona_Mem_in;
     signal mem_fromcore : Velona_Mem_Out;
 
@@ -29,8 +29,8 @@ begin
 
     MemorySystem : entity work.VelonaB3Mem
         generic  map (
-            rom_init_file => "../rom_init/trianglenumber.txt"
-        ) 
+            rom_init_file => "../rom_init/sevensegment.txt"
+        )
         port map (
             clk => clk,
             rst => rst,
@@ -38,7 +38,7 @@ begin
             mem_in => mem_fromcore,
             sw => sw
         );
-    
+
     clk_process :process
     begin
         clk <= '0';
