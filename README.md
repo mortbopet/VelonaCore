@@ -1,6 +1,8 @@
 # VelonaCore
 A single-cycle VHDL implementation of the 32-bit Leros instruction set.
 
+**Supported boards**:
+- Basys3: Memory map detailed in [memorymap.md](memorymap.md)
 
 ## Building & Running a Program
 
