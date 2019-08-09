@@ -1,6 +1,6 @@
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 use work.Common.all;
 
@@ -29,7 +29,7 @@ begin
 
     MemorySystem : entity work.VelonaB3Mem
         generic  map (
-            rom_init_file => "../rom_init/triangle.c.txt"
+            rom_init_file => "../rom_init/trianglenumber.txt"
         )
         port map (
             clk => clk,
