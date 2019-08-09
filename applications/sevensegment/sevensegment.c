@@ -9,8 +9,8 @@ void spinSleep(int time) {
 
 void displayNumber(int number) {
     // If division or modulo subroutines are included into the binary,
-    // it by far exceeds the current instruction memory size.
-    // So instead the number is displayed in hex
+    // it by far exceeds the current instruction memory size (making base-10
+    // non-viable). Instead the number is displayed in hex
     volatile unsigned int* seg = (unsigned int*)BASYS3_7SD_BASE;
     for(int i = 0; i < 4; i ++) {
         unsigned int ssdval;
