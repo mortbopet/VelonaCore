@@ -15,8 +15,7 @@ void displayNumber(int number) {
     for(int i = 0; i < 4; i ++) {
         unsigned int ssdval;
         // This should just be done as array indexing, but the compiler insists
-        // on emitting the above initialization values outside the .text
-        // segment
+        // on emitting array initialization values outside the .text segment
         switch(number & 0xF) {
             case 0x0: ssdval = 0x3f; break;
             case 0x1: ssdval = 0x06; break;
