@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 package Common is
     -- Board info
-    constant CLK_FREQ : integer := 100000000;
+    constant CLK_FREQ : integer := 10000000;
     constant SEVSEG_N : integer := 4; -- Number of seven-segment displays
 
     -- ISA info
