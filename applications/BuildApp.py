@@ -65,15 +65,39 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("app", help="Name of application to build")
-    parser.add_argument("--sp",
-        help="Initial stack pointer value, default: " + STACK_PTR_DEF,
-        default=STACK_PTR_DEF,
+    
+    sp_group = parser.add_mutually_exclusive_group(required=True)
+
+    sp_group.add_argument("--sp",
+        help="Initial stack pointer value, in hex",
         type=str)
 
+    sp_group.add_argument("--ramsizesp",
+        help="Total RAM size, in hex. \n"
+              "If set, the user may specify the ram size as an argument.\n"
+              "From this, the stack pointer will be initialized just below\n"
+              "the point of which the 256 registers are memory mapped, this \n"
+              "being the optimal position for the stack pointer. \n"
+              "THIS ISTHE PREFERRED OPTION\n.", type=str)
+
     args = parser.parse_args()
+
+    if args.ramsizesp != None:
+        if args.ramsizesp.lower()[0:2] != "0x":
+            print("Ram size not specified as hex number")
+            sys.exit(1)
+        sp = int(args.ramsizesp, 16)
+        # Set stack pointer value to the address just below the 256 32-bit 
+        # memory mapped registers
+        sp = sp - (256 * 4) - 4
+        sp = hex(sp)
+    else:
+        sp = args.sp
+    
+    print("Initializing stack pointer to: " + sp)
 
     if args.app == None:
         parser.print_help()
         sys.exit(1)
     
-    build(args.app, args.sp)
+    build(args.app, sp)
