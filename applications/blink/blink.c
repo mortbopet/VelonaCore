@@ -1,9 +1,9 @@
 #include "VelonaCore_Basys3.h"
 
 /* Blinks the LEDs on the Basys3 board */
+volatile int *led_addr = BASYS3_LED_ADDR;
 
 void main() {
-    volatile int *led_addr = BASYS3_LED_ADDR;
     int led_state = 0;
     volatile int cntr;
     int max_cntr = 500000;

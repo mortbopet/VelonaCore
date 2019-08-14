@@ -6,6 +6,9 @@
  * LEDs.
  */
 
+volatile unsigned int *LEDS = BASYS3_LED_ADDR;
+volatile unsigned int *SWITCHES = BASYS3_SW_ADDR;
+
 int triangle(int n)
 {
     int sum = 0;
@@ -19,8 +22,6 @@ int triangle(int n)
 
 void main()
 {
-    volatile unsigned int *LEDS = BASYS3_LED_ADDR;
-    volatile unsigned int *SWITCHES = BASYS3_SW_ADDR;
     while (1)
         *LEDS = triangle(*SWITCHES);
 }
