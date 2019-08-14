@@ -37,7 +37,8 @@ begin
 
     MemorySystem : entity work.VelonaB3Mem
         generic  map (
-            rom_init_file => "../rom_init/sevensegment.txt"
+            instruction_init_file => "../mem_init/app.text",
+            data_init_file => "../mem_init/app.data" 
         )
         port map (
             clk => clk,

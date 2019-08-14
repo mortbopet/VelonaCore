@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_unsigned.all;
+use std.textio.all;
 
 -- A byte addressable RAM with variable read- and write width
 -- The ram is synthesized of 32-bit words. Unaligned access is illegal.
@@ -11,7 +12,8 @@ use work.Common.all;
 
 entity RAM is
     generic (
-        size : integer -- 2^$size words
+        size : integer; -- 2^$size words
+        init_file : string := ""
     );
     Port (
         clk : in std_logic;
@@ -27,8 +29,35 @@ end RAM;
 
 architecture Behavioral of RAM is
 
-    type mem_arr is array((2**size) downto 0) of std_logic_vector(31 downto 0);
-    signal mem : mem_arr := (others => (others => '0'));
+    type mem_arr is array((2**size - 1) downto 0) of std_logic_vector(31 downto 0);
+    
+    impure function initMem (fn : in string) return mem_arr is
+        file RomFile : text is in fn;
+        variable RomFileLine : line;
+        variable linedata : bit_vector(31 downto 0);
+        variable outrom : mem_arr;
+    
+        begin
+            for i in outrom'range loop
+                readline (RomFile, RomFileLine);
+                read(RomFileLine, linedata);
+                outrom(2**size - 1 - i) := to_stdlogicvector(linedata);
+            end loop;
+            return outrom;
+        end function;
+    
+        impure function initMemPrimer(fn : in string) return mem_arr is
+        variable outrom : mem_arr;
+        begin
+            if fn = "" then
+                outrom := (others => (others => '0'));
+            else
+                outrom := initMem(fn);
+            end if;
+            return outrom;
+        end function;
+    
+    signal mem : mem_arr :=  initMemPrimer(init_file);
     
     signal data_read, data_write : std_logic_vector(31 downto 0);
     

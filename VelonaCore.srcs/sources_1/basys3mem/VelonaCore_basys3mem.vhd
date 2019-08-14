@@ -8,7 +8,8 @@ use work.sevsegdriver_pkg.all;
 
 entity VelonaB3Mem is
   generic (
-      rom_init_file : string := ""
+      instruction_init_file : string := "";
+      data_init_file : string := ""
   );
   Port (
       clk, rst : in std_logic;
@@ -36,10 +37,14 @@ architecture Behavioral of VelonaB3Mem is
     constant seg_addr : unsigned(REG_WIDTH - 1 downto 0)    := X"9FFF0100";
 
     -- RAM size is specified in words, but ibyte indexed
-    -- 2**(11 - 2) * 4 B = 2kB RAM
-    constant ram_address_width : integer := 11;
-    -- 2**9 * 2 B = 1kB ROM
-    constant rom_address_width : integer := 9;
+    -- 2**(11 - 2) * 4 B = 4kB RAM
+    constant ram_address_width : integer := 12;
+    constant ram_start : unsigned(REG_WIDTH - 1 downto 0)   := X"20000000";
+    constant ram_size : unsigned(REG_WIDTH - 1 downto 0)    := to_unsigned(2**ram_address_width, ram_start'length);
+    constant ram_end : unsigned(REG_WIDTH - 1 downto 0)     := ram_start + ram_size;
+ 
+    -- 2**11 * 2 B = 4kB ROM
+    constant rom_address_width : integer := 11;
 
 
     signal ram_data_out : std_logic_vector(REG_WIDTH-1 downto 0);
@@ -99,7 +104,7 @@ begin
     generic map (
         data_width => INSTR_WIDTH,
         addr_width => rom_address_width, -- ensure address space is large enough for the loaded binary file
-        init_file => rom_init_file
+        init_file => instruction_init_file
     )
     port map (
         -- ROM is half-word aligned access, mem_in.im_addr is byte-aligned
@@ -111,7 +116,8 @@ begin
     -- 1kB RAM
     Data_mem : entity work.RAM
     generic map (
-        size => (ram_address_width - 2) -- size specified in words, ram_address_width is byte aligned
+        size => (ram_address_width - 2), -- size specified in words, ram_address_width is byte aligned
+        init_file => data_init_file
     )
     port map (
         clk => clk,
@@ -128,7 +134,7 @@ begin
     determine_access : process(mem_in.dm_addr, ram_data_out, mem_in.dm_op, mem_in.reg_op)
     begin
         -- Memory access (RAM)
-        if mem_in.dm_op /= nop and mem_in.dm_addr < 2**ram_address_width then
+        if mem_in.dm_op /= nop and mem_in.dm_addr >= ram_start and mem_in.dm_addr < ram_end then
             mem_dest <= ram;
         -- Register acces - mapped to top 256 32-bit words of RAM
         elsif mem_in.reg_op /= nop then

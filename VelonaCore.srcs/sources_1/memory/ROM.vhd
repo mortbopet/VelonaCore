@@ -17,7 +17,7 @@ entity ROM is
 end ROM;
 
 architecture Behavioral of ROM is
-    type mem_arr is array((2**addr_width) downto 0) of std_logic_vector(data_width - 1 downto 0);
+    type mem_arr is array((2**addr_width - 1) downto 0) of std_logic_vector(data_width - 1 downto 0);
 
     --Read from file function--
     impure function initRom (fn : in string) return mem_arr is
@@ -30,7 +30,7 @@ architecture Behavioral of ROM is
         for i in outrom'range loop
             readline (RomFile, RomFileLine);
             read(RomFileLine, linedata);
-            outrom(2**addr_width - i) := to_stdlogicvector(linedata);
+            outrom(2**addr_width - 1 - i) := to_stdlogicvector(linedata);
         end loop;
         return outrom;
     end function;
