@@ -6,5 +6,8 @@
 *.sim/*/**
 *.hw
 
+# Generated memory initialization files
+VelonaCore.srcs/sources_1/mem_init/*
+
 # Editors
 .vscode/*

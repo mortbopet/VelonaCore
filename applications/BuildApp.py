@@ -3,9 +3,9 @@ import sys
 import subprocess
 import argparse
 
-appdir = os.path.dirname(os.path.realpath(__file__))
+from bintotxt import doBinToTxt
 
-STACK_PTR_DEF = "0x3FC"
+appdir = os.path.dirname(os.path.realpath(__file__))
 
 EXPECTED_DIR_STRUCTURE = """ .
 ├── build-leros-llvm
@@ -17,7 +17,32 @@ EXPECTED_DIR_STRUCTURE = """ .
          └─── ${TARGET}
 """
 
-def build(target, stackptr):
+def getSectionSizes(elf):
+    """ Decodes a readelf -S output to read the sizes of ELF sections;
+    ie. decodes the following output:
+    There are 8 section headers, starting at offset 0x235c:
+
+    Section Headers:
+    [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+    [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+    [ 1] .text             PROGBITS        00000000 001000 0003f2 00  AX  0   0  4
+    [ 2] .data             NOBITS          20000000 002000 000000 00  AX  0   0  1
+    ...
+    """
+    headers = subprocess.check_output(["readelf", "-S", elf]).decode('UTF-8')
+    sectionSizes = {}
+    for line in headers.splitlines():
+        line = line.split()
+        if line and line[0].startswith('['):
+            if line[2].startswith('.'):
+                sectionSizes[line[2]] = int(line[6], 16)
+
+    return (headers, sectionSizes)
+
+
+def buildTarget(target):
+    output_files = []
+    load_info = ""
     # Ensure we are in the VelonaCore/applications folder
     os.chdir(appdir)
 
@@ -37,67 +62,84 @@ def build(target, stackptr):
     VerifyDirExists("../../" + "build-leros-llvm")
     VerifyDirExists("../../" + "leros-lib")
     VerifyDirExists("../../" + "VelonaCore")
-    VerifyDirExists("../VelonaCore.srcs/sources_1/rom_init")
     VerifyDirExists(target)
 
+    # Try to create mem_init folder if not there
+    TryCall(["mkdir", "-p", "../VelonaCore.srcs/sources_1/mem_init"])
+
     # Generate filenames
-    exec_fn = target + "/" + target
-    bin_fn = exec_fn + ".bin"
-    txt_fn = exec_fn + ".txt"
+    elf_fn = target + "/" + target
+
+    textseg_bin_fn = elf_fn + ".bin.text"
+    textseg_txt_fn = "../VelonaCore.srcs/sources_1/mem_init/" + "app.text"
+
+    dataseg_bin_fn = elf_fn + ".bin.data"
+    dataseg_txt_fn = "../VelonaCore.srcs/sources_1/mem_init/" + "app.data"
 
     # Build app using Makefile
-    TryCall(["make", "TARGET="+target, "LEROS_STACK_PTR="+stackptr])
+    TryCall(["make", "TARGET="+target])
 
-    # Extract the raw binary using objcopy
+    output_files.append(elf_fn)
+
+    # Extract the raw binary segments using objcopy.
+    # Before using llvm-objcopy, it must be determined whether a section actually
+    # contains information -llvm-objcopy crashes if one tries to objcopy a
+    # section which is non-existant or has a size = 0
+    (headers, sectionSizes) = getSectionSizes(elf_fn)
+
+    data_section_cmds = []
+    if  ".data" in sectionSizes and sectionSizes[".data"] != 0:
+        data_section_cmds.append("-j")
+        data_section_cmds.append(".data")
+    if  ".bss" in sectionSizes and sectionSizes[".bss"] != 0:
+        data_section_cmds.append("-j")
+        data_section_cmds.append(".bss")
+
     TryCall(["../../build-leros-llvm/bin/llvm-objcopy",
-        "-O",
-        "binary",
-        exec_fn,
-        bin_fn])
+        "-O", "binary", "-j", ".text", elf_fn, textseg_bin_fn])
 
-    # Convert binary to text (bintotxt.py adds .txt extension)
-    TryCall(["python", "bintotxt.py", bin_fn])
+    # Convert raw binary to textual binary
+    doBinToTxt(textseg_bin_fn, textseg_txt_fn, bytesPerLine=2)
+    # cleanup
+    TryCall(["rm", "-f", textseg_bin_fn])
+    output_files.append(textseg_txt_fn)
 
-    # Move to source folder
-    TryCall(["cp", txt_fn, "../VelonaCore.srcs/sources_1/rom_init"])
+    if data_section_cmds:
+        TryCall(["../../build-leros-llvm/bin/llvm-objcopy",
+            "-O", "binary", *data_section_cmds, elf_fn, dataseg_bin_fn])
+        doBinToTxt(dataseg_bin_fn, dataseg_txt_fn, bytesPerLine=4)
+        TryCall(["rm", "-f", dataseg_bin_fn])
+        output_files.append(dataseg_txt_fn)
+    else:
+        # A blank file is written to allow for the VHDL sources to stay constant
+        print("No .data or .bss section in output .elf file")
+        print("Writing blank app.data file")
+        with open(dataseg_txt_fn, 'w') as fo:
+            fo.write('')
+
+    return (output_files, headers)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("app", help="Name of application to build")
-    
-    sp_group = parser.add_mutually_exclusive_group(required=True)
-
-    sp_group.add_argument("--sp",
-        help="Initial stack pointer value, in hex",
-        type=str)
-
-    sp_group.add_argument("--ramsizesp",
-        help="Total RAM size, in hex. \n"
-              "If set, the user may specify the ram size as an argument.\n"
-              "From this, the stack pointer will be initialized just below\n"
-              "the point of which the 256 registers are memory mapped, this \n"
-              "being the optimal position for the stack pointer. \n"
-              "THIS ISTHE PREFERRED OPTION\n.", type=str)
-
     args = parser.parse_args()
-
-    if args.ramsizesp != None:
-        if args.ramsizesp.lower()[0:2] != "0x":
-            print("Ram size not specified as hex number")
-            sys.exit(1)
-        sp = int(args.ramsizesp, 16)
-        # Set stack pointer value to the address just below the 256 32-bit 
-        # memory mapped registers
-        sp = sp - (256 * 4) - 4
-        sp = hex(sp)
-    else:
-        sp = args.sp
-    
-    print("Initializing stack pointer to: " + sp)
 
     if args.app == None:
         parser.print_help()
         sys.exit(1)
-    
-    build(args.app, sp)
+
+    target = args.app.replace('/','')
+    print(
+"============================ VelonaCore Build system ===========================")
+    print("Starting build of application: " + target + "\n")
+
+    (output_files, headers) = buildTarget(target)
+
+    print("\nApplication \"" + target + "\" built successfully")
+    print("Output files are:")
+    for f in output_files:
+        print("     " + f)
+    print(
+"================================================================================")

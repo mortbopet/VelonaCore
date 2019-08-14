@@ -36,11 +36,10 @@ endif
 
 BIN 		= $(TARGET)/$(TARGET)
 
-SRCDIR		= $(TARGET)
-OBJDIR		= $(TARGET)
+TARGETDIR		= $(TARGET)
 
-SRC			:= $(shell find $(SRCDIR) -type f -name '*.c')
-OBJ			:= $(patsubst $(SRCDIR)/%,$(OBJDIR)/%,$(SRC:.c=.o))
+SRC			:= $(shell find $(TARGETDIR) -type f -name '*.c')
+OBJ			:= $(patsubst $(TARGETDIR)/%,$(TARGETDIR)/%,$(SRC:.c=.o))
 
 # Path to the Leros LLVM toolchain
 TC				?= ../../build-leros-llvm/bin
@@ -48,9 +47,9 @@ LEROS_LIB_PATH	?= ../../leros-lib
 
 CC			:= $(TC)/clang
 
-# CRT0 source file, assumed to be placed in the leros-lib repository
-CRT0_SRC	:= $(LEROS_LIB_PATH)/runtime/crt0.leros.c
-CRT0_OBJ	:= $(OBJDIR)/crt0.leros.o
+# Entry point source file
+START_SRC	:= startup_VelonaCore.s
+START_OBJ	:= $(TARGETDIR)/startup_VelonaCore.o
 
 # Board file for the VelonaCore
 VELONACORE_H := $(LEROS_LIB_PATH)/cores/VelonaCore/basys3/VelonaCore_Basys3.h
@@ -61,27 +60,32 @@ INC		=	-I$(dir $(VELONACORE_H))
 # Instruct clang to use leros32 as the backend target
 CFLAGS	:=	-target leros32
 
-# Link using leros.ld, ensuring that emmission of .text segment starts at 0x0
-LINKER_SCRIPT	:= leros.ld
-LDFLAGS			:= -Xlinker $(LINKER_SCRIPT)
+# Link using VelonaCore.ld. Given that this linker script includes memory
+# segment definitions which are defined in a header, the C preprocessor must be
+# run.
+LINKER_SCRIPT	:= VelonaCore.ld
+LINKER_SCRIPT_PP := $(TARGETDIR)/pp_${LINKER_SCRIPT}
+LDFLAGS			:= -Xlinker $(LINKER_SCRIPT_PP)
 
 # Rules
 .PHONY: clean
 .DEFAULT_GOAL := all
 
-all: $(BIN) clean
+all: $(LINKER_SCRIPT_PP) $(BIN) clean
 
-$(BIN): $(CRT0_OBJ) $(OBJ)
+$(BIN): $(START_OBJ) $(OBJ)
 	$(CC) -nostartfiles $(LDFLAGS) $^ -o $@
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+# Preprocess linker script
+$(LINKER_SCRIPT_PP) : $(LINKER_SCRIPT)
+	gcc -E -x c $^ -o $@
+
+$(TARGETDIR)/%.o: $(TARGETDIR)/%.c
 	$(CC) $(INC) -c -o $@ $<
 
-$(CRT0_OBJ): $(CRT0_SRC)
-ifndef LEROS_STACK_PTR
-	$(error LEROS_STACK_PTR is not set)
-endif
-	$(CC) $< -c -o $@ -DLEROS_STACK_PTR=$(LEROS_STACK_PTR)
+$(START_OBJ): $(START_SRC)
+	$(CC) -c $< -o $@
 
 clean:
-	rm $(TARGET)/*.o
+	rm -f $(TARGET)/*.o
+	rm -f $(LINKER_SCRIPT_PP)
