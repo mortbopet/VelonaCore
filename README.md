@@ -33,7 +33,7 @@ python3 BuildApp.py sevensegment
 ```
 This will output two text files in the `VelonaCore.srcs/sources_1/rom-init` folder:
 - **app.text**: The `.text` segment of the just compiled application
-- **app.data**: The `.data` and `.bss` segments of the just compiled application (*todo: add .rodata*).
+- **app.data**: The `.data` segment of the just compiled application
  
 These file contains a textual binary version of the program which you've just compiled, and will be used to initialize the instruction- and data memories within the core.
 
@@ -61,7 +61,8 @@ python3 BuildApp.py foo
 # Todo:
 ## Build system
 
-- Include `.rodata` section into RAM initialization file (this involves linker script work + BuildApp.py modifications)
+- Include `.rodata` section into RAM initialization file (this involves linker script work + BuildApp.py modifications). `.rodata` may be placed after the `.data` section, possibly exchanging place with the `.bss` section.
+- Remove `.bss` from the generated `app.data` file. the `.bss` section is per definition empty, and we need only to know the size and position of the section to zero it.
 
 ## Hardware
 
