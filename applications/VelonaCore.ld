@@ -16,7 +16,7 @@ SECTIONS
        *(.text*)
     } > ROM
 
-    .data :
+    .data ALIGN(4):
     {
         *(.rodata*)
         *(.data)
@@ -24,7 +24,7 @@ SECTIONS
         __data_end__ = .;
     } > RAM
 
-    .bss :
+    .bss ALIGN(4):
     {
         // Ensure that .bss is word-aligned, allowing for zero'ing
         // by stind instructions.
