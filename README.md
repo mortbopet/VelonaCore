@@ -4,7 +4,7 @@ A single-cycle VHDL implementation of the 32-bit Leros instruction set.
 **Supported boards**:
 - Basys3: Memory map detailed in [memorymap.md](memorymap.md)
 
-## Building & Running a Program
+## Compiling & Executing a Program
 
 ### Prerequisites
 The build scripts within the `applications` folder assumes a specific layout of the Leros-related repositories.
@@ -24,7 +24,7 @@ Therefore, when checking out this repository, it should be placed next to the ot
 A Leros toolchain must be available to build programs for VelonaCore.  
 Build the Leros toolchain (https://github.com/leros-dev/leros-llvm) by executing the bundled `build.sh` script. The `leros-lib` repository (required for building applications for VelonaCore) will be checked out during building, and will be placed as seen above.
 
-### Building
+### Compiling a Program
 
 Build your program using the [BuildApp.py](applications/BuildApp.py) script. Example usage:
 ```sh
