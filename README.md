@@ -40,6 +40,7 @@ These file contains a textual binary version of the program which you've just co
 For now, the only precaution is to ensure that the [memory_zones.h](applications/memory_zones.h) header file contains the correct memory sizes as the design is being built with.  
 Memory sizes are specified in the [VelonaCore_basys3mem.vhd](VelonaCore.srcs/sources_1/basys3mem/VelonaCore_basys3mem.vhd) file.
 
+Once a program has been compiled, the design is to be resynthesized in Vivado.
 
 ### Executing
 The VelonaCore will, once out of reset, start executing from address `0x0`. Given successfull synthesis of the VelonaCore as well as the program, once the bitstream is written to the FPGA, the program should start executing.
